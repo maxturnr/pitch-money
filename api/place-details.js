@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place_id}&fields=formatted_address,geometry&key=${apiKey}`
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place_id}&fields=formatted_address,geometry,address_components&key=${apiKey}`
     
     const response = await fetch(url)
     const data = await response.json()

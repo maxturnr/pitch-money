@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Update Finexer Webhook</title>
+</head>
+<body>
+  <h1>Update Finexer Webhook to Subscribe to All Events</h1>
+  <button onclick="updateWebhook()">Update Webhook</button>
+  <pre id="output"></pre>
+
+  <script>
+    async function updateWebhook() {
+      const output = document.getElementById('output');
+      output.textContent = 'Fetching webhooks...';
+
+      const apiKey = prompt('Enter your Finexer API key:');
+      if (!apiKey) return;
+
+      const auth = btoa(`${apiKey}:`);
+
+      try {
+        // First, list all webhooks
+        const listResponse = await fetch('https://api.finexer.com/webhooks', {
+          headers: {
+            'Authorization': `Basic ${auth}`,
+          }
+        });
+
+        const webhooks = await listResponse.json();
+        output.textContent = 'Webhooks:\n' + JSON.stringify(webhooks, null, 2);
+
+        if (!webhooks.data || webhooks.data.length === 0) {
+          output.textContent += '\n\nNo webhooks found!';
+          return;
+        }
+
+        // Find the webhook pointing to our Supabase function
+        const ourWebhook = webhooks.data.find(wh => 
+          wh.url.includes('supabase.co/functions/v1/finexer-webhook')
+        );
+
+        if (!ourWebhook) {
+          output.textContent += '\n\nWebhook not found! Please create one manually.';
+          return;
+        }
+
+        output.textContent += '\n\nFound webhook: ' + ourWebhook.id;
+        output.textContent += '\nCurrent events: ' + JSON.stringify(ourWebhook.events);
+
+        // Update to subscribe to all events
+        const updateResponse = await fetch(`https://api.finexer.com/webhooks/${ourWebhook.id}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'events[]=%2A' // Subscribe to all events (*)
+        });
+
+        const updated = await updateResponse.json();
+        output.textContent += '\n\nUpdated webhook:\n' + JSON.stringify(updated, null, 2);
+        output.textContent += '\n\n✅ Webhook now subscribed to ALL events!';
+
+      } catch (error) {
+        output.textContent += '\n\nError: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

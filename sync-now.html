@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sync Finexer Now</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Syncing Finexer Accounts & Transactions...</h1>
+  <div id="status">Initializing...</div>
+  <pre id="result"></pre>
+
+  <script>
+    const SUPABASE_URL = 'https://aestjnijiiimduyfpdgt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlc3RqbmlqaWlpbWR1eWZwZGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NjE0MDAsImV4cCI6MjA5NTAzNzQwMH0._DHvR-RNx-IZrOhWf5d2PFlQZv8ODprMbjCENHMsNAA';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    async function syncNow() {
+      const status = document.getElementById('status');
+      const result = document.getElementById('result');
+      
+      try {
+        // Get current session
+        status.textContent = 'Checking authentication...';
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+          status.textContent = 'Not logged in. Please log in first.';
+          result.textContent = 'Error: No active session. Please log in to Fleet OS first.';
+          return;
+        }
+        
+        // Get account ID
+        status.textContent = 'Finding account...';
+        const { data: accounts, error: accountError } = await supabase
+          .from('accounts')
+          .select('id, finexer_customer_id')
+          .limit(1);
+        
+        if (accountError || !accounts || accounts.length === 0) {
+          status.textContent = 'No account found';
+          result.textContent = 'Error: ' + (accountError?.message || 'No accounts found');
+          return;
+        }
+        
+        const account_id = accounts[0].id;
+        status.textContent = `Syncing account ${account_id}...`;
+        
+        // Call sync function
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/finexer-sync-accounts`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ account_id }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Sync failed');
+        }
+        
+        status.textContent = '✅ Sync Complete!';
+        result.textContent = JSON.stringify(data, null, 2);
+        
+        setTimeout(() => {
+          window.close();
+        }, 3000);
+        
+      } catch (error) {
+        status.textContent = '❌ Sync Failed';
+        result.textContent = 'Error: ' + error.message;
+      }
+    }
+    
+    // Auto-run on load
+    syncNow();
+  </script>
+</body>
+</html>

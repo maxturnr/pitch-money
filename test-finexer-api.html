@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Finexer API</title>
+</head>
+<body>
+  <h1>Test Finexer API Direct</h1>
+  <button onclick="testAPI()">Test API</button>
+  <pre id="output"></pre>
+
+  <script>
+    async function testAPI() {
+      const output = document.getElementById('output');
+      output.textContent = 'Testing...';
+
+      const apiKey = prompt('Enter your Finexer API key:');
+      if (!apiKey) return;
+
+      const customerId = 'cus_Svt5S49morwd2yW4cQpZ';
+      const auth = btoa(`${apiKey}:`);
+
+      try {
+        // Test 1: List bank accounts
+        output.textContent += '\n\n=== TEST 1: List Bank Accounts ===\n';
+        const accountsResponse = await fetch(`https://api.finexer.com/bank_accounts?customer=${customerId}`, {
+          headers: {
+            'Authorization': `Basic ${auth}`,
+          }
+        });
+        const accounts = await accountsResponse.json();
+        output.textContent += JSON.stringify(accounts, null, 2);
+
+        if (accounts.data && accounts.data.length > 0) {
+          const firstAccount = accounts.data[0];
+          output.textContent += `\n\n=== TEST 2: Sync Bank Account ${firstAccount.id} ===\n`;
+          
+          // Test 2: Trigger sync
+          const syncResponse = await fetch(`https://api.finexer.com/bank_accounts/${firstAccount.id}/sync`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${auth}`,
+            }
+          });
+          const syncResult = await syncResponse.json();
+          output.textContent += JSON.stringify(syncResult, null, 2);
+
+          // Test 3: Get sync status
+          output.textContent += `\n\n=== TEST 3: Get Sync Status ===\n`;
+          const statusResponse = await fetch(`https://api.finexer.com/bank_accounts/${firstAccount.id}/sync`, {
+            headers: {
+              'Authorization': `Basic ${auth}`,
+            }
+          });
+          const statusResult = await statusResponse.json();
+          output.textContent += JSON.stringify(statusResult, null, 2);
+
+          // Test 4: List transactions
+          output.textContent += `\n\n=== TEST 4: List Transactions ===\n`;
+          const txnResponse = await fetch(`https://api.finexer.com/bank_accounts/${firstAccount.id}/transactions?limit=10`, {
+            headers: {
+              'Authorization': `Basic ${auth}`,
+            }
+          });
+          const txnResult = await txnResponse.json();
+          output.textContent += JSON.stringify(txnResult, null, 2);
+        }
+
+      } catch (error) {
+        output.textContent += '\n\nError: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

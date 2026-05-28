@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Pitch Bank</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+@font-face {
+  font-family:'Inter Tight';
+  src:url('./fonts/InterTight-VariableFont_wght.ttf') format('truetype');
+  font-weight:100 900;
+  font-style:normal;
+}
+@font-face {
+  font-family:'Inter Tight';
+  src:url('./fonts/InterTight-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight:100 900;
+  font-style:italic;
+}
+@font-face {
+  font-family:'Ivy Presto Display';
+  src:url('./fonts/IvyPrestoDisplay.ttf') format('truetype');
+  font-weight:400;
+  font-style:normal;
+}
+:root {
+  --bg: #f9faf7;
+  --surface: #ffffff;
+  --surface-2: #ebe7de;
+  --surface-3: #f3f0ea;
+  --ink: #14130f;
+  --ink-2: #3a3731;
+  --muted: #7a7368;
+  --muted-2: #a39c8f;
+  --line: rgba(20, 19, 15, 0.09);
+  --line-2: rgba(20, 19, 15, 0.05);
+  --accent: oklch(0.42 0.18 264);
+  --accent-2: oklch(0.58 0.16 264);
+  --accent-soft: oklch(0.94 0.04 264);
+  --positive: oklch(0.55 0.14 150);
+  --warn: oklch(0.62 0.16 60);
+  --danger: oklch(0.58 0.16 28);
+  --serif: 'Newsreader', Georgia, serif;
+  --radius: 16px;
+  --radius-lg: 24px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--ink);font-family:'Inter Tight',sans-serif;font-weight:400;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01","cv11";}
+body *, body *::before, body *::after{letter-spacing:0 !important;}
+.hidden{display:none !important;}
+
+#login-screen{position:fixed;inset:0;background:#f5f2eb;display:flex;align-items:stretch;justify-content:center;z-index:1000;padding:28px;overflow:auto;}
+.login-layout{width:min(1880px,100%);display:grid;grid-template-columns:minmax(520px,1.05fr) minmax(420px,0.9fr);gap:18px;align-items:stretch;min-height:calc(100vh - 56px);}
+.login-box{padding:54px 46px;border:1px solid #ddd5ca;background:#fff;animation:fadeUp 0.5s ease both;border-radius:30px;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;}
+.login-logo-wrap{display:flex;align-items:center;justify-content:center;width:100%;margin-bottom:34px;}
+.login-logo-icon{width:30px;height:30px;border-radius:12px;background:#111;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;}
+.login-logo-word{font-family:'Newsreader',Georgia,serif;font-size:26px;color:#14130f;font-style:italic}
+.login-heading{font-family:'Ivy Presto Display', Georgia, serif;font-size:24px;line-height:1.05;font-weight:400;color:#1b1a18;margin-bottom:10px;max-width:600px;text-align:center;}
+.login-subcopy{display:none;font-size:16px;color:#6f695f;margin-bottom:28px;max-width:520px;line-height:1.5;}
+.login-form{width:min(420px,100%);text-align:left;}
+.auth-toggle{display:none}
+.auth-tab{display:none}
+.auth-tab.active{display:none}
+.signup-progress{display:none}
+.signup-progress-chip{display:none}
+.signup-step-panel{display:none}
+.signup-step-panel.active{display:block}
+.signup-actions{display:flex;gap:14px;margin-top:22px}
+.signup-page-link{margin-top:22px;font-size:14px;color:#6f695f;text-align:center}
+.signup-page-link button{background:none;border:none;color:#5a5147;text-decoration:underline;cursor:pointer;font:inherit;padding:0}
+.signup-legal{margin-top:20px;font-size:12px;color:#6f695f;line-height:1.7;text-align:center}
+.signup-legal a{color:#5a5147}
+.role-choice.active{background:#14130f;color:#fff;border-color:#14130f}
+.password-wrap{position:relative}
+.password-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:#7a7368;cursor:pointer;font-size:15px;line-height:1;padding:0}
+.password-wrap .login-input{padding-right:42px}
+.wizard-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+.wizard-row.three{grid-template-columns:repeat(3,minmax(0,1fr));}
+.login-label,.form-label{font-size:12px;color:#6f695f;margin-bottom:8px;display:block;text-align:left;letter-spacing:.02em}
+.login-input,.form-control{width:100%;background:#fff;border:1px solid #cdc4b7;color:#202020;padding:10px 16px;font-family:'Inter Tight',sans-serif;font-size:14px;outline:none;border-radius:16px;transition:border-color 0.2s, box-shadow 0.2s;}
+.login-input:focus,.form-control:focus{border-color:#111;box-shadow:0 0 0 4px rgba(17,17,17,0.05);}
+.login-input::placeholder,.form-control::placeholder{color:#6f695f;}
+.login-btn,.btn-primary,.btn-secondary,.btn-cancel,.btn-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:none;cursor:pointer;font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:500}
+.login-btn{width:100%;padding:10px 16px;min-height:42px}
+.login-btn,.btn-primary{background:#0f0d14;color:#fff}
+.btn-secondary{background:#fff;border:1px solid #d6cec2;color:#14130f;padding:10px 14px}
+.btn-cancel{background:#d45555;color:#fff;padding:10px 14px}
+.btn-pill{height:30px;padding:0 12px;background:#fff;border:1px solid #d6cec2;color:#5f594e}
+.btn-pill.active{background:#14130f;color:#fff;border-color:#14130f}
+.login-error{color:var(--red);font-size:13px;margin-top:12px;text-align:center;min-height:18px;}
+.auth-shell .login-label{display:none}
+.signup-mode .auth-toggle{display:none}
+.signup-mode #signin-panel{display:none !important}
+.signup-mode .login-logo-wrap{margin-bottom:18px}
+.signup-mode .login-form{max-width:520px}
+.login-visual{position:relative;border-radius:26px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);background:
+  radial-gradient(circle at 20% 100%,rgba(121,184,255,0.52),transparent 24%),
+  radial-gradient(circle at 75% 88%,rgba(145,198,255,0.16),transparent 30%),
+  radial-gradient(circle at 50% 0%,rgba(255,255,255,0.18) 0 1px,transparent 1px),
+  radial-gradient(circle at 18% 15%,rgba(255,255,255,0.95) 0 1px,transparent 1.5px),
+  radial-gradient(circle at 28% 30%,rgba(255,255,255,0.75) 0 1px,transparent 1.5px),
+  radial-gradient(circle at 68% 22%,rgba(255,255,255,0.85) 0 1px,transparent 1.5px),
+  radial-gradient(circle at 84% 9%,rgba(255,255,255,0.70) 0 1px,transparent 1.5px),
+  radial-gradient(circle at 88% 42%,rgba(255,255,255,0.65) 0 1px,transparent 1.5px),
+  linear-gradient(180deg,#0e1520 0%,#1c2b40 62%,#5e95ba 100%);
+  display:flex;align-items:center;justify-content:center;padding:48px;}
+.login-visual::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(circle at 15% 20%,rgba(255,255,255,0.14) 0 1px,transparent 1.5px),
+  radial-gradient(circle at 38% 12%,rgba(255,255,255,0.12) 0 1px,transparent 1.5px),
+  radial-gradient(circle at 58% 35%,rgba(255,255,255,0.12) 0 1px,transparent 1.5px),
+  radial-gradient(circle at 74% 18%,rgba(255,255,255,0.14) 0 1px,transparent 1.5px),
+  radial-gradient(circle at 92% 30%,rgba(255,255,255,0.18) 0 1px,transparent 1.5px);}
+.login-visual-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;max-width:560px;}
+.login-visual-title{font-family:'Ivy Presto Display', Georgia, serif;font-size:64px;line-height:0.94;font-weight:400;max-width:700px;margin-bottom:18px;}
+.login-visual-card{margin-top:28px;width:min(430px,100%);padding:24px 22px 16px;border-radius:24px;border:1px solid rgba(255,255,255,0.18);background:linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.08));backdrop-filter:blur(12px);text-align:left;box-shadow:0 22px 40px rgba(7,12,20,0.18);}
+.login-visual-card-label{font-size:12px;color:rgba(255,255,255,0.62);text-transform:uppercase;}
+.login-visual-card-value{font-size:42px;line-height:1;font-weight:300;margin-top:14px;}
+.login-visual-card-note{font-size:14px;color:rgba(255,255,255,0.82);margin-top:8px;}
+
+#app{display:none;min-height:100vh;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:248px;background:#f5f5f5;border-right:none;display:flex;flex-direction:column;z-index:100;}
+.sidebar-header{display:flex;align-items:center;padding:22px 14px 0;gap:10px;border-bottom:none;}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:4px 10px 0;min-height:auto;}
+.sidebar-brand-mark{width:30px;height:30px;border-radius:9px;background:#14130f;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-family:'Newsreader', Georgia, serif;font-size:17px;font-style:italic;font-weight:400;padding-bottom:2px;}
+.sidebar-brand-word{font-family:'Newsreader', Georgia, serif;font-size:22px;font-weight:400;color:#14130f;}
+.sidebar-nav{flex:1;padding:12px 14px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+.nav-btn{display:flex;align-items:center;gap:12px;width:100%;padding:9px 14px;font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:400;border:none;background:transparent;color:#3a3731;cursor:pointer;transition:background .15s,color .15s;text-align:left;position:relative;border-radius:10px;margin-bottom:0;}
+.nav-btn:hover{background:#ebe7de;color:#14130f;}
+.nav-btn.active{background:#fff;color:#14130f;box-shadow:0 1px 0 rgba(20,19,15,0.05),0 1px 3px rgba(0,0,0,0.025);}
+.nav-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#7a7368;flex-shrink:0;}
+.nav-btn.active .nav-icon{color:#1f3eb8;}
+.sidebar-footer{padding:14px;border-top:none;display:flex;flex-direction:column;gap:8px;}
+.meta-card{padding:14px;border:1px solid #e7e0d4;border-radius:16px;background:#fff}
+.meta-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#7a7368;margin-bottom:6px}
+.meta-value{font-size:14px;color:#14130f}
+
+.main-content{margin-left:248px;min-height:100vh;background:#f5f5f5;transition:none;}
+.content{padding:8px 28px 36px;}
+.tab-panel{display:none;animation:fadeUp 0.3s ease both;}
+.tab-panel.active{display:block;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
+.page-title{font-family:'Inter Tight',sans-serif;font-size:30px;font-weight:400;line-height:1;}
+.page-title span{color:var(--gold);}
+.page-sub{font-size:12px;color:var(--muted2);margin-top:8px;font-family:'Inter Tight',sans-serif;letter-spacing:0.03em;text-transform:uppercase;font-weight:400;}
+.table-shell{border:1px solid var(--border);border-radius:24px;background:#fff;overflow:hidden;}
+.table-shell-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 18px;border-bottom:1px solid #ece6dd;flex-wrap:wrap;}
+.table-shell-label{font-family:'Inter Tight',sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#7a7368;font-weight:400;}
+.table-shell-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto;}
+.table-shell-summary{display:flex;align-items:center;gap:0;padding:14px 18px;border-bottom:1px solid #ece6dd;flex-wrap:wrap;}
+.summary-chip{display:flex;align-items:baseline;gap:5px;font-size:14px;color:#7a7368}
+.summary-chip:not(:last-child)::after{content:'·';color:#b3aa9c;margin-left:10px}
+.grid-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.metric-card{padding:18px;background:#fff;border:1px solid #e7e0d4;border-radius:20px}
+.metric-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a7368;margin-bottom:8px}
+.metric-value{font-family:'Ivy Presto Display',Georgia,serif;font-size:32px;color:#14130f}
+.filters-bar{display:grid;grid-template-columns:1.4fr repeat(5,minmax(0,1fr));gap:10px;padding:14px 18px;border-bottom:1px solid #ece6dd}
+.stat-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:18px}
+.panel-card{background:#fff;border:1px solid #e7e0d4;border-radius:24px;padding:20px}
+.panel-title{font-family:'Inter Tight',sans-serif;font-size:18px;color:#14130f;margin-bottom:8px}
+.panel-copy{font-size:14px;color:#7a7368;line-height:1.5}
+.queue-list{display:grid;gap:10px;margin-top:14px}
+.queue-item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid #ece6dd;border-radius:14px;background:#fff}
+.queue-item-title{font-size:14px;color:#14130f;font-weight:500}
+.queue-item-sub{font-size:12px;color:#7a7368;margin-top:3px}
+.pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:#f3eee6;color:#5f594e;font-size:12px}
+.status-badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.status-new{background:#edf2ff;color:#3155c6}
+.status-suggested{background:#e3f3ff;color:#0d5ea8}
+.status-needs_review{background:#fff2dd;color:#9b5a08}
+.status-reconciled{background:#dff4e8;color:#13633d}
+.status-ignored{background:#f0ece6;color:#73685b}
+.inbox-table{width:100%;border-collapse:collapse}
+.inbox-table th{padding:12px 18px;text-align:left;font-size:12px;color:#8d867b;font-weight:400;background:#fff;border-bottom:1px solid #ece6dd}
+.inbox-table td{padding:14px 18px;border-bottom:1px solid #f0ece5;vertical-align:top;font-size:13px;color:#14130f}
+.tx-title{font-size:14px;font-weight:500;color:#14130f}
+.tx-meta{font-size:12px;color:#7a7368;margin-top:4px}
+.tx-amount.in{color:#23a56b;font-weight:600}
+.tx-amount.out{color:#14130f;font-weight:600}
+.action-stack{display:flex;gap:8px;flex-wrap:wrap}
+
+.onboarding-shell{padding:20px;background:#fff;border:1px solid #e7e0d4;border-radius:24px}
+.step-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.step-chip{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e7e0d4;border-radius:14px;background:#fcfbf7;color:#7a7368}
+.step-chip.active{border-color:#c9dbfb;background:#f0f6ff;color:#1f3eb8}
+.company-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.section-title{font-size:14px;color:#14130f;font-weight:500;margin-bottom:12px}
+.section-sub{font-size:12px;color:#7a7368;line-height:1.5;margin-bottom:14px}
+.bank-card{padding:16px;border:1px solid #ece6dd;border-radius:18px;background:#fff}
+.bank-list{display:grid;gap:12px}
+.member-grid{display:grid;gap:12px}
+.member-card{padding:16px;border:1px solid #ece6dd;border-radius:18px;background:#fff}
+.onboarding-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:18px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);width:760px;max-width:95vw;max-height:90vh;overflow-y:auto;animation:fadeUp 0.25s ease both;border-radius:28px;box-shadow:var(--shadow-md);}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Inter Tight',sans-serif;font-size:18px;font-weight:400;}
+.modal-close{background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;line-height:1;}
+.modal-body{padding:24px;}
+.modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.span2{grid-column:span 2}
+.span3{grid-column:span 3}
+.address-wrap{position:relative}
+.address-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border2);border-top:none;max-height:220px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 8px 18px rgba(0,0,0,0.08);}
+.address-dropdown.open{display:block;}
+.address-option{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;}
+.address-option:hover{background:var(--surface3);}
+.address-option:last-child{border-bottom:none;}
+.address-option-main{font-size:13px;color:#14130f;margin-bottom:3px;}
+.address-option-detail{font-size:10px;color:var(--muted2);}
+.address-option.manual{background:#fcfbf7;}
+.address-option.manual .address-option-main{font-weight:500;}
+.address-loading{padding:10px 12px;text-align:center;font-size:11px;color:var(--muted2);}
+.structured-address{display:none;margin-top:14px;}
+.structured-address.active{display:block;}
+.inline-link-btn{background:none;border:none;color:#5a5147;text-decoration:underline;cursor:pointer;font:inherit;padding:0;}
+.address-toolbar{display:flex;justify-content:flex-end;margin-top:10px;}
+.toast{position:fixed;right:18px;bottom:18px;background:#14130f;color:#fff;padding:12px 14px;border-radius:12px;display:none;z-index:800}
+.toast.show{display:block}
+
+.tab-bar{display:flex;align-items:center;gap:8px;padding:0 0 16px;border-bottom:1px solid var(--line-2);}
+.tab-button{background:transparent;border:none;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+.tab-button:hover{background:var(--surface-2);color:var(--ink-2);}
+.tab-button.active{background:var(--ink);color:#fff;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+.table-header{background:var(--surface);border:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.table-header-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.table-label{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:500;}
+.filter-bar{background:var(--surface);border:1px solid var(--line);border-top:none;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.filter-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;}
+.search-box{position:relative;min-width:300px;flex:1 1 320px;max-width:420px;}
+.search-input{width:100%;padding:9px 14px 9px 38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:14px;color:var(--ink);outline:none;transition:border-color 0.2s,background 0.2s;}
+.search-input:focus{border-color:var(--accent);background:var(--surface);}
+.search-input::placeholder{color:var(--muted-2);}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none;}
+.filter-select{min-width:160px;width:auto;padding:9px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:14px;color:var(--ink);outline:none;appearance:none;}
+.filter-select:focus{border-color:var(--accent);background:var(--surface);}
+
+.table-container{background:var(--surface);border:1px solid var(--line);border-top:none;border-radius:0 0 18px 18px;overflow:hidden;}
+.table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.data-table{width:100%;border-collapse:collapse;min-width:980px;}
+.data-table thead{background:var(--surface);border-bottom:1px solid var(--line);}
+.data-table th{padding:14px 16px;text-align:left;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;letter-spacing:0.01em;}
+.data-table th:first-child,.data-table td:first-child{padding-left:24px;}
+.data-table tbody tr{border-bottom:1px solid var(--line-2);transition:background 0.12s;cursor:pointer;}
+.data-table tbody tr:hover{background:rgba(20,19,15,0.02);}
+.data-table tbody tr:last-of-type{border-bottom:none;}
+.data-table td{padding:16px;font-size:14px;color:var(--ink);vertical-align:middle;}
+.cell-merchant{font-weight:400;color:var(--ink);font-size:14px;}
+.cell-merchant-sub{margin-top:3px;color:var(--muted);font-size:12px;}
+.cell-amount{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:500;}
+.cell-amount.in{color:var(--positive);}
+.cell-amount.out{color:var(--danger);}
+.status-badge{display:inline-flex;align-items:center;padding:5px 11px;border-radius:7px;font-size:12px;font-weight:400;}
+.status-badge.new{background:rgba(53,167,246,0.12);color:oklch(0.58 0.16 264);}
+.status-badge.reconciled{background:rgba(35,165,107,0.12);color:oklch(0.55 0.14 150);}
+.status-badge.pending{background:rgba(251,146,60,0.12);color:oklch(0.55 0.14 60);}
+
+@keyframes fadeUp {
+  from {opacity:0;transform:translateY(18px);}
+  to {opacity:1;transform:translateY(0);}
+}
+@media (max-width:1200px){
+  .grid-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .filters-bar,.company-grid,.form-grid,.form-grid.three,.onboarding-grid{grid-template-columns:1fr 1fr}
+  .stat-grid{grid-template-columns:1fr}
+}
+@media (max-width:980px){
+  .login-layout{grid-template-columns:1fr;min-height:auto;}
+  .login-box{padding:40px 24px}
+  .login-heading{font-size:24px}
+  .sidebar{position:static;width:100%;height:auto}
+  .main-content{margin-left:0}
+}
+@media (max-width:720px){
+  .content{padding:18px}
+  .grid-cards,.filters-bar,.company-grid,.form-grid,.form-grid.three,.onboarding-grid{grid-template-columns:1fr}
+  .wizard-row,.wizard-row.three{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+  <div id="login-screen">
+    <div class="login-layout">
+      <div class="login-box">
+        <div class="login-logo-wrap">
+          <div class="login-logo-icon">P</div>
+          <div class="login-logo-word">Pitch Bank</div>
+        </div>
+        <div class="login-heading" id="auth-heading">Welcome back</div>
+        <div class="login-subcopy" id="auth-subcopy">Sign in to keep reconciling live bank activity, balances, and team access.</div>
+
+        <div class="login-form">
+          <div id="signin-panel" class="auth-shell" style="margin-top:30px">
+            <div>
+              <label class="login-label" for="signin-email">E-mail</label>
+              <input class="login-input" id="signin-email" type="email" autocomplete="email" placeholder="E-mail" aria-label="E-mail">
+            </div>
+            <div class="password-wrap" style="margin-top:14px">
+              <label class="login-label" for="signin-password">Password</label>
+              <input class="login-input" id="signin-password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+              <button class="password-toggle" type="button" id="signin-password-toggle" aria-label="Show password">◉</button>
+            </div>
+            <div class="signup-actions">
+              <button class="login-btn" type="button" id="login-btn">Sign in</button>
+            </div>
+            <div class="signup-page-link">Don’t have an account? <button type="button" id="signin-create-account-link">Create account</button></div>
+          </div>
+
+          <div id="signup-panel" class="hidden auth-shell" style="margin-top:30px">
+            <div class="signup-step-panel active" id="signup-step-1">
+              <div class="wizard-row">
+                <div>
+                  <label class="login-label" for="signup-first-name">First name</label>
+                  <input class="login-input" id="signup-first-name" type="text" autocomplete="given-name" placeholder="First name" aria-label="First name">
+                </div>
+                <div>
+                  <label class="login-label" for="signup-last-name">Last name</label>
+                  <input class="login-input" id="signup-last-name" type="text" autocomplete="family-name" placeholder="Last name" aria-label="Last name">
+                </div>
+              </div>
+              <div style="margin-top:14px">
+                <label class="login-label" for="signup-email">E-mail</label>
+                <input class="login-input" id="signup-email" type="email" autocomplete="email" placeholder="E-mail" aria-label="E-mail">
+              </div>
+              <div class="password-wrap" style="margin-top:14px">
+                <label class="login-label" for="signup-password">Password</label>
+                <input class="login-input" id="signup-password" type="password" autocomplete="new-password" minlength="8" placeholder="Password" aria-label="Password">
+                <button class="password-toggle" type="button" id="signup-password-toggle" aria-label="Show password">◉</button>
+              </div>
+              <div class="signup-actions">
+                <button class="login-btn" type="button" id="signup-next-1">Sign up</button>
+              </div>
+              <div class="signup-page-link">Already have an account? <button type="button" id="signup-have-account-link">Sign in</button></div>
+              <div class="signup-legal">
+                By creating an account, you agree to our <a href="#" onclick="return false;">Terms of Service</a> and <a href="#" onclick="return false;">Privacy Policy</a>.
+                You also acknowledge that connected bank data will only be used to power transaction reconciliation and account visibility inside Pitch Bank.
+              </div>
+            </div>
+
+            <div class="signup-step-panel" id="signup-step-2">
+              <div class="signup-legal" id="signup-role-copy" style="margin-top:6px;margin-bottom:18px">
+                Welcome. What’s your role at the dealership?
+              </div>
+              <div class="wizard-row" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+                <button class="btn-secondary role-choice" type="button" data-role="Owner">Owner</button>
+                <button class="btn-secondary role-choice" type="button" data-role="Manager">Manager</button>
+                <button class="btn-secondary role-choice" type="button" data-role="Sales">Sales</button>
+                <button class="btn-secondary role-choice" type="button" data-role="Admin">Admin</button>
+              </div>
+              <div class="signup-actions">
+                <button class="btn-secondary" type="button" id="signup-back-2">Back</button>
+                <button class="login-btn" type="button" id="signup-next-2">Continue</button>
+              </div>
+            </div>
+
+            <div class="signup-step-panel" id="signup-step-3">
+              <div class="wizard-row">
+                <div>
+                  <label class="login-label" for="company-legal-name">Legal name</label>
+                  <input class="login-input" id="company-legal-name" type="text" autocomplete="organization" placeholder="Legal Name" aria-label="Legal Name">
+                </div>
+                <div>
+                  <label class="login-label" for="company-trading-name">Trading name</label>
+                  <input class="login-input" id="company-trading-name" type="text" placeholder="Trading Name" aria-label="Trading Name">
+                </div>
+              </div>
+              <div class="address-wrap" style="margin-top:14px">
+                <label class="login-label" for="company-address">Address</label>
+                <input class="login-input" id="company-address" type="text" placeholder="Start typing address" autocomplete="off" aria-label="Address">
+                <div id="company-address-suggestions" class="address-dropdown"></div>
+              </div>
+              <div class="structured-address" id="structured-address-fields">
+                <div class="wizard-row">
+                  <div>
+                    <label class="login-label" for="company-address-line-1">First line of address</label>
+                    <input class="login-input" id="company-address-line-1" type="text" placeholder="First Line of Address" aria-label="First Line of Address">
+                  </div>
+                  <div>
+                    <label class="login-label" for="company-address-line-2">Second line of address</label>
+                    <input class="login-input" id="company-address-line-2" type="text" placeholder="Second Line of Address" aria-label="Second Line of Address">
+                  </div>
+                </div>
+                <div class="wizard-row" style="margin-top:14px">
+                  <div>
+                    <label class="login-label" for="company-city">City / town</label>
+                    <input class="login-input" id="company-city" type="text" placeholder="City / Town" aria-label="City / Town">
+                  </div>
+                  <div>
+                    <label class="login-label" for="company-postcode">Postcode</label>
+                    <input class="login-input" id="company-postcode" type="text" placeholder="Postcode" aria-label="Postcode">
+                  </div>
+                </div>
+                <div class="wizard-row" style="margin-top:14px">
+                  <div>
+                    <label class="login-label" for="company-country">Country</label>
+                    <input class="login-input" id="company-country" type="text" placeholder="Country" aria-label="Country">
+                  </div>
+                </div>
+                <div class="address-toolbar">
+                  <button class="inline-link-btn" type="button" id="change-address-btn">Search again</button>
+                </div>
+              </div>
+              <div class="wizard-row" style="margin-top:14px">
+                <div>
+                  <label class="login-label" for="company-phone">Phone number</label>
+                  <input class="login-input" id="company-phone" type="text" autocomplete="tel" placeholder="Phone Number" aria-label="Phone Number">
+                </div>
+                <div>
+                  <label class="login-label" for="company-email">Email address</label>
+                  <input class="login-input" id="company-email" type="email" placeholder="Email Address" aria-label="Email Address">
+                </div>
+              </div>
+              <div class="wizard-row" style="margin-top:14px">
+                <div>
+                  <label class="login-label" for="company-number">Company number</label>
+                  <input class="login-input" id="company-number" type="text" placeholder="Company Number (if applicable)" aria-label="Company Number">
+                </div>
+                <div>
+                  <label class="login-label" for="vat-number">VAT number</label>
+                  <input class="login-input" id="vat-number" type="text" placeholder="VAT Number (if applicable)" aria-label="VAT Number">
+                </div>
+              </div>
+              <div class="signup-actions">
+                <button class="btn-secondary" type="button" id="signup-back-3">Back</button>
+                <button class="login-btn" type="button" id="signup-finish-btn">Continue</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="login-error" id="auth-error"></div>
+        </div>
+      </div>
+
+      <div class="login-visual">
+        <div class="login-visual-content">
+          <div class="login-visual-title">Track spend. Reconcile instantly. Run the business from the bank feed.</div>
+          <div class="login-visual-card">
+            <div class="login-visual-card-label">Bank-first operations</div>
+            <div class="login-visual-card-value">Live cash view</div>
+            <div class="login-visual-card-note">Every new income and expense lands in one queue, ready to reconcile and route to the right people.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="sidebar-brand-mark">P</div>
+          <div class="sidebar-brand-word">Pitch Bank</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" type="button" data-tab="dashboard"><span class="nav-icon">◧</span><span>Dashboard</span></button>
+        <button class="nav-btn" type="button" data-tab="transactions"><span class="nav-icon">↘</span><span>Transactions</span></button>
+        <button class="nav-btn" type="button" data-tab="team"><span class="nav-icon">⌘</span><span>Team</span></button>
+        <button class="nav-btn" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="meta-card">
+          <div class="meta-label">Company</div>
+          <div class="meta-value" id="sidebar-company">Not linked</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">User</div>
+          <div class="meta-value" id="sidebar-user">Signed out</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Permissions</div>
+          <div class="meta-value" id="sidebar-permissions">No access</div>
+        </div>
+        <button class="btn-secondary" type="button" id="signout-btn">Sign out</button>
+      </div>
+    </div>
+
+    <main class="main-content">
+      <div class="content">
+        <div id="setup-state" class="panel-card hidden">
+          <div class="panel-title">No company link found</div>
+          <div class="panel-copy">This user is not attached to a company account yet. If they were invited, signing in with the invited email will auto-accept the invite.</div>
+        </div>
+
+        <section id="tab-dashboard" class="tab-panel active">
+          <div class="page-header">
+            <div>
+              <div class="page-title"><span>Dashboard</span></div>
+              <div class="page-sub">BANK-FIRST ONBOARDING AND LIVE STATUS</div>
+            </div>
+            <div class="table-shell-tools">
+              <button class="btn-secondary" type="button" id="refresh-btn">Refresh</button>
+            </div>
+          </div>
+
+          <div id="onboarding-shell" class="onboarding-shell hidden">
+            <div class="section-title">Finish account setup</div>
+            <div class="section-sub" id="onboarding-copy">Complete the company onboarding before moving into the live transactions workflow.</div>
+            <div class="step-row">
+              <div class="step-chip active" id="step-user">1. User + company</div>
+              <div class="step-chip" id="step-bank">2. Connect bank accounts</div>
+              <div class="step-chip" id="step-team">3. Invite team</div>
+            </div>
+
+            <div id="bank-onboarding-stage" class="onboarding-grid">
+              <div class="bank-card">
+                <div class="section-title">Connect bank account</div>
+                <div class="section-sub">Connect your business bank account via Finexer. You'll be redirected to select your bank and authenticate securely.</div>
+                <div id="finexer-status" style="margin:14px 0;padding:12px;border-radius:8px;display:none;font-size:13px;"></div>
+                <div class="modal-footer" style="padding:18px 0 0;border-top:none;justify-content:flex-start">
+                  <button class="btn-primary" type="button" id="connect-bank-btn">🏦 Connect Bank Account</button>
+                  <button class="btn-secondary hidden" type="button" id="continue-to-team-btn">All accounts connected</button>
+                </div>
+              </div>
+
+              <div class="bank-card">
+                <div class="section-title">Connected accounts</div>
+                <div class="section-sub">Keep adding until every business account you want in the feed is connected.</div>
+                <div class="bank-list" id="connected-banks-list"></div>
+                <div class="modal-footer" style="padding:18px 0 0;border-top:none;justify-content:flex-start">
+                  <button class="btn-secondary" type="button" id="sync-accounts-btn" style="display:none">🔄 Sync Accounts</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="team-onboarding-stage" class="onboarding-grid hidden">
+              <div class="bank-card">
+                <div class="section-title">Invite the team</div>
+                <div class="section-sub">Now that the bank feeds are connected, add the rest of the company account and decide exactly what each person can see.</div>
+                <div class="queue-list">
+                  <div class="queue-item"><div><div class="queue-item-title">Admin</div><div class="queue-item-sub">Can invite, manage permissions, connect accounts, view all balances</div></div></div>
+                  <div class="queue-item"><div><div class="queue-item-title">Finance / ops</div><div class="queue-item-sub">Can reconcile all transactions without full admin rights</div></div></div>
+                  <div class="queue-item"><div><div class="queue-item-title">Sales / staff</div><div class="queue-item-sub">Can be restricted to assigned transactions or own spending only</div></div></div>
+                </div>
+                <div class="modal-footer" style="padding:18px 0 0;border-top:none;justify-content:flex-start">
+                  <button class="btn-primary" type="button" id="open-team-tab-btn">Invite team members</button>
+                  <button class="btn-secondary" type="button" id="finish-onboarding-btn">Go live for now</button>
+                </div>
+              </div>
+              <div class="bank-card">
+                <div class="section-title">Connected feed summary</div>
+                <div class="section-sub">Review the connected bank accounts and history windows before the company moves into the live transactions inbox.</div>
+                <div class="bank-list" id="connected-banks-review-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="dashboard-live" class="hidden">
+            <div class="grid-cards">
+              <div class="metric-card"><div class="metric-label">New</div><div class="metric-value" id="metric-new">0</div></div>
+              <div class="metric-card"><div class="metric-label">Needs Review</div><div class="metric-value" id="metric-review">0</div></div>
+              <div class="metric-card"><div class="metric-label">Reconciled</div><div class="metric-value" id="metric-reconciled">0</div></div>
+              <div class="metric-card"><div class="metric-label">Live Balance</div><div class="metric-value" id="metric-balance">£0.00</div></div>
+            </div>
+
+            <div class="stat-grid">
+              <div class="panel-card">
+                <div class="panel-title">Recent feed activity</div>
+                <div class="panel-copy">New bank transactions land here first and move into the queue for review or auto-suggestion.</div>
+                <div class="queue-list" id="recent-feed-list"></div>
+              </div>
+              <div class="panel-card">
+                <div class="panel-title">Team rollout</div>
+                <div class="panel-copy">Once every bank is connected, start inviting users and tighten their visibility scope.</div>
+                <div class="queue-list">
+                  <div class="queue-item"><div><div class="queue-item-title">Admin</div><div class="queue-item-sub">All access, all balances, invites, permissions</div></div></div>
+                  <div class="queue-item"><div><div class="queue-item-title">Finance</div><div class="queue-item-sub">All transactions and reconciliation access</div></div></div>
+                  <div class="queue-item"><div><div class="queue-item-title">User</div><div class="queue-item-sub">Own spending only or assigned inbox only</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-transactions" class="tab-panel">
+          <div class="page-header">
+            <div>
+              <div class="page-title"><span>Transactions</span></div>
+              <div class="page-sub">BANK FEED LEDGER</div>
+            </div>
+          </div>
+
+          <div class="tab-bar">
+            <button class="tab-button active" type="button" data-reconcile-tab="unreconciled">Unreconciled</button>
+            <button class="tab-button" type="button" data-reconcile-tab="reconciled">Reconciled</button>
+          </div>
+
+          <div class="tab-content active" id="unreconciled-tab">
+            <div class="table-header">
+              <div class="table-header-left">
+                <div class="table-label">Unreconciled Transactions</div>
+              </div>
+            </div>
+            <div class="filter-bar">
+              <div class="filter-controls">
+                <div class="search-box">
+                  <span class="search-icon">🔍</span>
+                  <input class="search-input" id="search-input" type="text" placeholder="Search merchant, reference, description">
+                </div>
+                <select class="filter-select" id="direction-filter">
+                  <option value="">All directions</option>
+                  <option value="in">Money in</option>
+                  <option value="out">Money out</option>
+                </select>
+                <select class="filter-select" id="account-filter">
+                  <option value="">All accounts</option>
+                </select>
+                <select class="filter-select" id="status-filter">
+                  <option value="">All statuses</option>
+                  <option value="new">New</option>
+                  <option value="pending">Pending</option>
+                  <option value="needs_review">Needs review</option>
+                </select>
+                <input type="date" class="filter-select" id="date-from-inbox" placeholder="From date">
+                <input type="date" class="filter-select" id="date-to-inbox" placeholder="To date">
+                <select class="filter-select" id="sort-filter-inbox">
+                  <option value="recent">Latest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="amount-high">Highest amount</option>
+                  <option value="amount-low">Lowest amount</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-container">
+              <div class="table-wrapper">
+                <div id="inbox-scroll-container" style="overflow:auto;max-height:calc(100vh - 400px)">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Transaction</th>
+                        <th>Account</th>
+                        <th style="text-align:right">Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="inbox-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="reconciled-tab">
+            <div class="table-header">
+              <div class="table-header-left">
+                <div class="table-label">Reconciled Transactions</div>
+              </div>
+            </div>
+            <div class="filter-bar">
+              <div class="filter-controls">
+                <div class="search-box">
+                  <span class="search-icon">🔍</span>
+                  <input class="search-input" id="search-input-reconciled" type="text" placeholder="Search merchant, reference, description">
+                </div>
+                <select class="filter-select" id="direction-filter-reconciled">
+                  <option value="">All directions</option>
+                  <option value="in">Money in</option>
+                  <option value="out">Money out</option>
+                </select>
+                <select class="filter-select" id="account-filter-reconciled">
+                  <option value="">All accounts</option>
+                </select>
+                <select class="filter-select" id="type-filter">
+                  <option value="">All types</option>
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                  <option value="transfer">Transfer</option>
+                </select>
+                <input type="date" class="filter-select" id="date-from-reconciled" placeholder="From date">
+                <input type="date" class="filter-select" id="date-to-reconciled" placeholder="To date">
+                <select class="filter-select" id="sort-filter-reconciled">
+                  <option value="recent">Latest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="amount-high">Highest amount</option>
+                  <option value="amount-low">Lowest amount</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-container">
+              <div class="table-wrapper">
+                <div id="reconciled-scroll-container" style="overflow:auto;max-height:calc(100vh - 400px)">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Transaction</th>
+                        <th>Account</th>
+                        <th style="text-align:right">Amount</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="reconciled-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-team" class="tab-panel">
+          <div class="page-header">
+            <div>
+              <div class="page-title"><span>Team</span></div>
+              <div class="page-sub">INVITES, PERMISSIONS, VISIBILITY</div>
+            </div>
+          </div>
+          <div class="stat-grid">
+            <div class="panel-card">
+              <div class="panel-title">Invite team member</div>
+              <div class="panel-copy">Invite users to the company account and define exactly what they can see and do.</div>
+              <div id="invite-disabled-note" class="section-sub hidden" style="margin-top:10px">This user cannot invite team members.</div>
+              <form id="invite-form">
+                <div class="form-grid" style="margin-top:14px">
+                  <div><label class="form-label" for="invite-first-name">First name</label><input class="form-control" id="invite-first-name" type="text"></div>
+                  <div><label class="form-label" for="invite-last-name">Last name</label><input class="form-control" id="invite-last-name" type="text"></div>
+                  <div><label class="form-label" for="invite-email">Email</label><input class="form-control" id="invite-email" type="email"></div>
+                  <div><label class="form-label" for="invite-job-title">Role title</label><input class="form-control" id="invite-job-title" type="text" placeholder="Sales, Ops, Admin"></div>
+                  <div><label class="form-label" for="invite-role">Permission role</label><select class="form-control" id="invite-role"><option value="viewer">Viewer</option><option value="user" selected>User</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+                  <div><label class="form-label" for="invite-inbox-scope">Inbox visibility</label><select class="form-control" id="invite-inbox-scope"><option value="all">All transactions</option><option value="own">Only assigned / own</option><option value="none">None</option></select></div>
+                  <div><label class="form-label" for="invite-spending-scope">Spending visibility</label><select class="form-control" id="invite-spending-scope"><option value="all">All spending</option><option value="own">Only own spending</option><option value="none">None</option></select></div>
+                  <div class="span2">
+                    <div class="section-title">Capabilities</div>
+                    <div class="step-row" style="margin-top:0">
+                      <label class="step-chip"><input type="checkbox" id="invite-can-reconcile" checked> Reconcile</label>
+                      <label class="step-chip"><input type="checkbox" id="invite-can-connect-bank"> Connect banks</label>
+                      <label class="step-chip"><input type="checkbox" id="invite-can-invite"> Invite users</label>
+                      <label class="step-chip"><input type="checkbox" id="invite-can-manage"> Manage permissions</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer" style="padding:18px 0 0;border-top:none;justify-content:flex-start">
+                  <button class="btn-primary" type="submit" id="invite-submit-btn">Create invite</button>
+                </div>
+              </form>
+            </div>
+            <div class="panel-card">
+              <div class="panel-title">Members and invites</div>
+              <div class="panel-copy">Pending invites are auto-accepted when the invited user signs up or signs in with the same email address.</div>
+              <div class="member-grid" id="team-list" style="margin-top:14px"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-settings" class="tab-panel">
+          <div class="page-header">
+            <div>
+              <div class="page-title"><span>Settings</span></div>
+              <div class="page-sub">COMPANY DETAILS AND LIVE ACCESS MODEL</div>
+            </div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-title">Bank account sync</div>
+            <div class="panel-copy">Manually sync your bank accounts and transactions from Finexer. This happens automatically on login and via webhooks, but you can force a sync here if needed.</div>
+            <div style="margin-top:14px">
+              <button class="btn-secondary" type="button" id="manual-sync-btn">🔄 Sync Bank Accounts Now</button>
+              <div id="manual-sync-status" style="margin-top:10px;font-size:13px;color:#666"></div>
+            </div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-title">Company profile</div>
+            <div class="form-grid" style="margin-top:14px">
+              <div><label class="form-label">Legal name</label><input class="form-control" id="settings-legal-name" type="text"></div>
+              <div><label class="form-label">Trading name</label><input class="form-control" id="settings-trading-name" type="text"></div>
+              <div class="span2"><label class="form-label">Address</label><input class="form-control" id="settings-address" type="text"></div>
+              <div><label class="form-label">Company phone</label><input class="form-control" id="settings-company-phone" type="text"></div>
+              <div><label class="form-label">Company email</label><input class="form-control" id="settings-company-email" type="email"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="modal-split-transaction">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Split Transaction</div>
+        <button class="modal-close" type="button" onclick="closeSplitModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div><label class="form-label">Original amount</label><input class="form-control" id="split-original-amount" type="text" disabled></div>
+          <div><label class="form-label">Reference</label><input class="form-control" id="split-original-reference" type="text" disabled></div>
+        </div>
+        <div id="split-lines" style="display:grid;gap:12px;margin-top:14px"></div>
+        <div class="modal-footer" style="padding:18px 0 0;border-top:none;justify-content:flex-start">
+          <button class="btn-secondary" type="button" id="add-split-line-btn">Add split line</button>
+        </div>
+        <div id="split-total" class="section-sub" style="margin-top:10px"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" type="button" onclick="closeSplitModal()">Cancel</button>
+        <button class="btn-primary" type="button" id="save-splits-btn">Save split</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const { createClient } = supabase
+const sb = createClient(
+  'https://aestjnijiiimduyfpdgt.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlc3RqbmlqaWlpbWR1eWZwZGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NjE0MDAsImV4cCI6MjA5NTAzNzQwMH0._DHvR-RNx-IZrOhWf5d2PFlQZv8ODprMbjCENHMsNAA'
+)
+
+let authMode = 'signin'
+let currentTab = 'dashboard'
+let currentUser = null
+let currentMembership = null
+let currentAccount = null
+let bankAccounts = []
+let inboxRows = []
+let filteredRows = []
+let cars = []
+let companyInvites = []
+let dealershipUsers = []
+let splitContext = null
+let companyAddressPredictions = []
+let addressSearchTimeout = null
+let selectedCompanyPlaceDetails = null
+let signupStage = 1
+let selectedRole = ''
+let companyAddressMode = 'lookup'
+const signupStageContent = {
+  1: {
+    heading: 'Create an account',
+    subcopy: ''
+  },
+  2: {
+    heading: 'Welcome',
+    subcopy: ''
+  },
+  3: {
+    heading: 'Company details',
+    subcopy: ''
+  }
+}
+
+const fmtMoney = value => '£' + Number(value || 0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})
+const escapeHtml = value => String(value ?? '')
+  .replace(/&/g,'&amp;')
+  .replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;')
+  .replace(/'/g,'&#39;')
+
+function showToast(message){
+  const el = document.getElementById('toast')
+  el.textContent = message
+  el.classList.add('show')
+  clearTimeout(showToast.timer)
+  showToast.timer = setTimeout(() => el.classList.remove('show'), 2600)
+}
+
+function slugify(value){
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'pitch-bank'
+}
+
+function handleRuntimeMessages(){
+  const params = new URLSearchParams(window.location.search)
+  if(params.get('finexer_connected') === 'true') showToast('Finexer account connected')
+  if(params.get('finexer_pending') === 'true') showToast('Finexer returned but account sync is still pending')
+  if(params.get('finexer_error')) showToast(decodeURIComponent(params.get('finexer_error')))
+  if(params.toString()){
+    const cleanUrl = `${window.location.pathname}${window.location.hash || ''}`
+    window.history.replaceState({}, '', cleanUrl)
+  }
+}
+
+function setAuthMode(mode){
+  authMode = mode
+  document.getElementById('login-screen').classList.toggle('signup-mode', mode === 'signup')
+  document.getElementById('signin-panel').classList.toggle('hidden', mode !== 'signin')
+  document.getElementById('signup-panel').classList.toggle('hidden', mode !== 'signup')
+  document.getElementById('auth-error').textContent = ''
+  if(mode === 'signup'){
+    selectedRole = ''
+    chooseRole('')
+    setSignupStage(1)
+  } else {
+    document.getElementById('auth-heading').textContent = 'Sign in'
+    document.getElementById('auth-subcopy').textContent = ''
+  }
+}
+
+function getSignupFirstName(){
+  return document.getElementById('signup-first-name').value.trim()
+    || loadPendingSignupProfile()?.firstName
+    || currentUser?.user_metadata?.first_name
+    || ''
+}
+
+function updateRoleStepCopy(firstName = getSignupFirstName()){
+  const safeName = firstName || 'there'
+  document.getElementById('auth-heading').textContent = `Welcome ${safeName}`
+  document.getElementById('auth-subcopy').textContent = ''
+  document.getElementById('signup-role-copy').textContent = 'What’s your role at the dealership?'
+}
+
+function setSignupStage(stage){
+  signupStage = stage
+  ;[1,2,3].forEach(step => {
+    document.getElementById(`signup-step-${step}`).classList.toggle('active', step === stage)
+    const progressEl = document.getElementById(`signup-progress-${step}`)
+    if(progressEl) progressEl.classList.toggle('active', step === stage)
+  })
+  if(stage === 2){
+    updateRoleStepCopy()
+  } else {
+    document.getElementById('auth-heading').textContent = signupStageContent[stage].heading
+    document.getElementById('auth-subcopy').textContent = signupStageContent[stage].subcopy
+  }
+  if(stage === 3 && !document.getElementById('company-email').value.trim()){
+    document.getElementById('company-email').value = document.getElementById('signup-email').value.trim()
+  }
+  if(stage === 3){
+    const hasStructuredAddress = !!(
+      document.getElementById('company-address-line-1').value.trim()
+      || document.getElementById('company-city').value.trim()
+      || document.getElementById('company-postcode').value.trim()
+    )
+    setCompanyAddressMode(hasStructuredAddress ? 'structured' : 'lookup', { clear: false })
+  }
+  document.getElementById('auth-error').textContent = ''
+}
+
+function togglePasswordVisibility(inputId, toggleId){
+  const input = document.getElementById(inputId)
+  const toggle = document.getElementById(toggleId)
+  const showing = input.type === 'text'
+  input.type = showing ? 'password' : 'text'
+  toggle.textContent = showing ? '◉' : '◌'
+  toggle.setAttribute('aria-label', showing ? 'Show password' : 'Hide password')
+}
+
+function requireSignupStep(stage, requirePassword = true){
+  const checks = {
+    1: [
+      ['First name', document.getElementById('signup-first-name').value.trim()],
+      ['Last name', document.getElementById('signup-last-name').value.trim()],
+      ['Email', document.getElementById('signup-email').value.trim()]
+    ],
+    2: [
+      ['Role', selectedRole]
+    ],
+    3: [
+      ['Legal Name', document.getElementById('company-legal-name').value.trim()],
+      ['Trading Name', document.getElementById('company-trading-name').value.trim()],
+      ['First line of address', document.getElementById('company-address-line-1').value.trim()],
+      ['City / Town', document.getElementById('company-city').value.trim()],
+      ['Postcode', document.getElementById('company-postcode').value.trim()],
+      ['Country', document.getElementById('company-country').value.trim()],
+      ['Phone Number', document.getElementById('company-phone').value.trim()],
+      ['Email Address', document.getElementById('company-email').value.trim()]
+    ]
+  }
+  if(stage === 1 && requirePassword){
+    checks[1].push(['Password', document.getElementById('signup-password').value])
+  }
+  const missing = (checks[stage] || []).find(([, value]) => !value)
+  if(missing) throw new Error(`${missing[0]} is required`)
+}
+
+function savePendingSignupProfile(profile){
+  localStorage.setItem('pitchbank_pending_signup', JSON.stringify(profile))
+}
+
+function loadPendingSignupProfile(){
+  try{
+    return JSON.parse(localStorage.getItem('pitchbank_pending_signup') || 'null')
+  }catch{
+    return null
+  }
+}
+
+function extractAddressParts(place){
+  const parts = {
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    postcode: '',
+    country: 'United Kingdom'
+  }
+  const components = place?.address_components || []
+  const byType = type => components.find(component => component.types?.includes(type))
+  const streetNumber = byType('street_number')?.long_name || ''
+  const route = byType('route')?.long_name || ''
+  parts.addressLine1 = [streetNumber, route].filter(Boolean).join(' ').trim()
+  parts.addressLine2 = byType('sublocality')?.long_name || byType('postal_town')?.long_name || ''
+  parts.city = byType('locality')?.long_name || byType('postal_town')?.long_name || byType('administrative_area_level_2')?.long_name || ''
+  parts.postcode = byType('postal_code')?.long_name || ''
+  parts.country = byType('country')?.long_name || 'United Kingdom'
+  return parts
+}
+
+function getStructuredAddressFields(){
+  return {
+    addressLine1: document.getElementById('company-address-line-1').value.trim(),
+    addressLine2: document.getElementById('company-address-line-2').value.trim(),
+    city: document.getElementById('company-city').value.trim(),
+    postcode: document.getElementById('company-postcode').value.trim(),
+    country: document.getElementById('company-country').value.trim() || 'United Kingdom'
+  }
+}
+
+function buildFormattedAddress(parts){
+  return [
+    parts.addressLine1,
+    parts.addressLine2,
+    parts.city,
+    parts.postcode,
+    parts.country
+  ].filter(Boolean).join(', ')
+}
+
+function populateStructuredAddressFields(parts = {}){
+  document.getElementById('company-address-line-1').value = parts.addressLine1 || ''
+  document.getElementById('company-address-line-2').value = parts.addressLine2 || ''
+  document.getElementById('company-city').value = parts.city || ''
+  document.getElementById('company-postcode').value = parts.postcode || ''
+  document.getElementById('company-country').value = parts.country || 'United Kingdom'
+}
+
+function setCompanyAddressMode(mode, options = {}){
+  companyAddressMode = mode
+  const lookupWrap = document.querySelector('.address-wrap')
+  const structured = document.getElementById('structured-address-fields')
+  const dropdown = document.getElementById('company-address-suggestions')
+
+  if(mode === 'lookup'){
+    lookupWrap.classList.remove('hidden')
+    structured.classList.remove('active')
+    dropdown.classList.remove('open')
+    if(options.clear !== false){
+      selectedCompanyPlaceDetails = null
+      document.getElementById('company-address').dataset.placeId = ''
+    }
+    return
+  }
+
+  lookupWrap.classList.add('hidden')
+  structured.classList.add('active')
+  dropdown.classList.remove('open')
+}
+
+function clearPendingSignupProfile(){
+  localStorage.removeItem('pitchbank_pending_signup')
+}
+
+function formatStatus(status){
+  return String(status || 'new').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
+}
+
+function statusBadge(status){
+  return `<span class="status-badge status-${status || 'new'}">${escapeHtml(formatStatus(status))}</span>`
+}
+
+function switchTab(name){
+  currentTab = name
+  document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'))
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === name))
+  document.getElementById(`tab-${name}`).classList.add('active')
+  
+  // Removed auto-sync on tab switch to avoid rate limiting
+}
+
+async function signIn(){
+  const email = document.getElementById('signin-email').value.trim()
+  const password = document.getElementById('signin-password').value
+  const btn = document.getElementById('login-btn')
+  const errorEl = document.getElementById('auth-error')
+  errorEl.textContent = ''
+  btn.disabled = true
+  btn.textContent = 'Signing in...'
+
+  const { error } = await sb.auth.signInWithPassword({ email, password })
+  if(error){
+    errorEl.textContent = error.message
+    btn.disabled = false
+    btn.textContent = 'Sign in'
+  }
+}
+
+function collectSignupDraft(requireAll=true, requirePassword=true){
+  const address = getStructuredAddressFields()
+  const draft = {
+    firstName: document.getElementById('signup-first-name').value.trim(),
+    lastName: document.getElementById('signup-last-name').value.trim(),
+    email: document.getElementById('signup-email').value.trim().toLowerCase(),
+    password: document.getElementById('signup-password').value,
+    jobTitle: selectedRole,
+    legalName: document.getElementById('company-legal-name').value.trim(),
+    tradingName: document.getElementById('company-trading-name').value.trim(),
+    formattedAddress: buildFormattedAddress(address),
+    companyPhone: document.getElementById('company-phone').value.trim(),
+    companyEmail: document.getElementById('company-email').value.trim().toLowerCase(),
+    companyNumber: document.getElementById('company-number').value.trim(),
+    vatNumber: document.getElementById('vat-number').value.trim(),
+    googlePlaceId: companyAddressMode === 'lookup' ? (document.getElementById('company-address')?.dataset.placeId || '') : '',
+    addressMode: companyAddressMode,
+    addressLine1: address.addressLine1,
+    addressLine2: address.addressLine2,
+    city: address.city,
+    postcode: address.postcode,
+    country: address.country
+  }
+  if(requireAll){
+    const required = [
+      ['First name', draft.firstName],
+      ['Last name', draft.lastName],
+      ['Email', draft.email],
+      ['Role', draft.jobTitle],
+      ['Legal Name', draft.legalName],
+      ['Trading Name', draft.tradingName],
+      ['Address', draft.formattedAddress],
+      ['Phone Number', draft.companyPhone],
+      ['Email Address', draft.companyEmail]
+    ]
+    if(requirePassword){
+      required.splice(3, 0, ['Password', draft.password])
+    }
+    const missing = required.find(([, value]) => !value)
+    if(missing){
+      throw new Error(`${missing[0]} is required`)
+    }
+  }
+  return draft
+}
+
+async function signUp(){
+  const btn = document.getElementById('signup-next-1')
+  const errorEl = document.getElementById('auth-error')
+  errorEl.textContent = ''
+  btn.disabled = true
+  btn.textContent = 'Signing up...'
+
+  try{
+    requireSignupStep(1, true)
+    const draft = collectSignupDraft(false, true)
+    savePendingSignupProfile(draft)
+    const { data, error } = await sb.auth.signUp({
+      email: draft.email,
+      password: draft.password,
+      options: {
+        data: {
+          first_name: draft.firstName,
+          last_name: draft.lastName,
+          full_name: `${draft.firstName} ${draft.lastName}`.trim()
+        }
+      }
+    })
+    if(error) throw error
+    if(data.session){
+      updateRoleStepCopy(draft.firstName)
+      setSignupStage(2)
+    } else {
+      showToast('Email confirmation is still enabled in Supabase')
+    }
+  }catch(error){
+    errorEl.textContent = error.message
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Sign up'
+  }
+}
+
+function chooseRole(role){
+  selectedRole = role
+  document.querySelectorAll('.role-choice').forEach(button => {
+    button.classList.toggle('active', button.dataset.role === role)
+  })
+}
+
+function continueFromRole(){
+  try{
+    requireSignupStep(2, false)
+    savePendingSignupProfile({
+      ...(loadPendingSignupProfile() || {}),
+      jobTitle: selectedRole
+    })
+    setSignupStage(3)
+  }catch(error){
+    document.getElementById('auth-error').textContent = error.message
+  }
+}
+
+async function finishSignupProfile(){
+  try{
+    requireSignupStep(3, false)
+    const draft = collectSignupDraft(true, true)
+    savePendingSignupProfile(draft)
+    if(currentUser){
+      const accountId = await maybeBootstrapOwnerAccount()
+      if(accountId){
+        await ensureFinexerCustomer(accountId)
+      }
+      await resolveSession()
+    }
+  }catch(error){
+    document.getElementById('auth-error').textContent = error.message
+  }
+}
+
+async function signOut(){
+  await sb.auth.signOut()
+}
+
+async function resolveSession(){
+  const { data } = await sb.auth.getSession()
+  currentUser = data?.session?.user || null
+
+  if(!currentUser){
+    document.getElementById('login-screen').style.display = 'flex'
+    document.getElementById('app').style.display = 'none'
+    document.getElementById('login-btn').disabled = false
+    document.getElementById('login-btn').textContent = 'Sign in'
+    document.getElementById('signup-next-1').disabled = false
+    document.getElementById('signup-next-1').textContent = 'Sign up'
+    return
+  }
+
+  const pending = loadPendingSignupProfile()
+  if(pending?.email && pending.email === currentUser.email?.toLowerCase()){
+    const { data: existingMembership } = await sb
+      .from('dealership_users')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .limit(1)
+      .maybeSingle()
+    if(!existingMembership){
+      document.getElementById('login-screen').style.display = 'flex'
+      document.getElementById('app').style.display = 'none'
+      document.getElementById('sidebar-user').textContent = currentUser.email || 'Signed in'
+      setAuthMode('signup')
+      if(pending.jobTitle){
+        chooseRole(pending.jobTitle)
+        setSignupStage(3)
+      } else {
+        updateRoleStepCopy(pending.firstName || currentUser.user_metadata?.first_name || '')
+        setSignupStage(2)
+      }
+      return
+    }
+  }
+
+  document.getElementById('login-screen').style.display = 'none'
+  document.getElementById('app').style.display = 'block'
+  document.getElementById('sidebar-user').textContent = currentUser.email || 'Signed in'
+
+  await maybeBootstrapOwnerAccount()
+  await maybeAcceptInvite()
+
+  const { data: membership, error: membershipError } = await sb
+    .from('dealership_users')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('active', true)
+    .limit(1)
+    .maybeSingle()
+  if(membershipError) return showToast(membershipError.message)
+
+  currentMembership = membership || null
+  if(!currentMembership){
+    document.getElementById('setup-state').classList.remove('hidden')
+    document.getElementById('sidebar-company').textContent = 'Unlinked'
+    document.getElementById('sidebar-permissions').textContent = 'No access'
+    return
+  }
+
+  document.getElementById('setup-state').classList.add('hidden')
+  
+  // Start hourly background sync timer
+  if(currentMembership?.account_id){
+    // Run initial sync if needed
+    syncBankAccountsBackground(currentMembership.account_id)
+    
+    // Set up hourly sync interval
+    setInterval(() => {
+      if(currentMembership?.account_id){
+        syncBankAccountsBackground(currentMembership.account_id)
+      }
+    }, 60 * 60 * 1000) // Every hour
+  }
+
+  const { data: account, error: accountError } = await sb
+    .from('accounts')
+    .select('*')
+    .eq('id', currentMembership.account_id)
+    .single()
+  if(accountError) return showToast(accountError.message)
+  currentAccount = account
+
+  // Finexer customer will be created when user clicks "Connect Bank Account"
+
+  document.getElementById('sidebar-company').textContent = currentAccount.trading_name || currentAccount.dealer_name || 'Company'
+  document.getElementById('sidebar-permissions').textContent = [
+    currentMembership.role,
+    `${currentMembership.inbox_visibility_scope || 'all'} inbox`,
+    `${currentMembership.spending_visibility_scope || 'all'} spending`
+  ].join(' · ')
+
+  await loadWorkspace()
+}
+
+async function maybeBootstrapOwnerAccount(){
+  const pending = loadPendingSignupProfile()
+  const email = currentUser?.email?.toLowerCase()
+  if(!pending || !email) return null
+
+  const existingMembership = await sb
+    .from('dealership_users')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .limit(1)
+    .maybeSingle()
+  if(existingMembership.data){
+    clearPendingSignupProfile()
+    const existingAccount = await sb
+      .from('accounts')
+      .select('id')
+      .eq('owner_user_id', currentUser.id)
+      .limit(1)
+      .maybeSingle()
+    return existingAccount.data?.id || null
+  }
+
+  const profile = {
+    firstName: pending.firstName || currentUser.user_metadata?.first_name || '',
+    lastName: pending.lastName || currentUser.user_metadata?.last_name || '',
+    jobTitle: pending.jobTitle || currentUser.user_metadata?.job_title || '',
+    legalName: pending.legalName || currentUser.user_metadata?.company_legal_name || '',
+    tradingName: pending.tradingName || currentUser.user_metadata?.company_trading_name || pending.legalName || '',
+    formattedAddress: pending.formattedAddress || '',
+    companyPhone: pending.companyPhone || '',
+    companyEmail: pending.companyEmail || email,
+    email,
+    addressLine1: pending.addressLine1 || '',
+    addressLine2: pending.addressLine2 || '',
+    city: pending.city || '',
+    postcode: pending.postcode || '',
+    country: pending.country || 'United Kingdom',
+    googlePlaceId: pending.googlePlaceId || null,
+    companyNumber: pending.companyNumber || '',
+    vatNumber: pending.vatNumber || ''
+  }
+
+  if(!profile.firstName || !profile.lastName || !profile.jobTitle || !profile.legalName || !profile.tradingName || !profile.formattedAddress || !profile.companyPhone || !profile.companyEmail){
+    return null
+  }
+
+  const slug = `${slugify(profile.tradingName || profile.legalName)}-${String(currentUser.id).slice(0,8)}`
+  const fullName = `${profile.firstName} ${profile.lastName}`.trim()
+  const membershipRole = profile.jobTitle === 'Manager'
+    ? 'manager'
+    : (profile.jobTitle === 'Owner' || profile.jobTitle === 'Admin' ? 'admin' : 'user')
+
+  const { data: account, error: accountError } = await sb
+    .from('accounts')
+    .insert({
+      dealer_name: profile.legalName,
+      legal_name: profile.legalName,
+      trading_name: profile.tradingName,
+      slug,
+      primary_email: profile.email,
+      company_email: profile.companyEmail,
+      company_phone: profile.companyPhone,
+      formatted_address: profile.formattedAddress,
+      address_line_1: profile.addressLine1 || null,
+      address_line_2: profile.addressLine2 || null,
+      city: profile.city || null,
+      postcode: profile.postcode || null,
+      country: profile.country || 'United Kingdom',
+      company_number: profile.companyNumber || null,
+      vat_number: profile.vatNumber || null,
+      google_place_id: profile.googlePlaceId,
+      owner_user_id: currentUser.id,
+      onboarding_status: 'connect_bank'
+    })
+    .select()
+    .single()
+  if(accountError && !String(accountError.message).toLowerCase().includes('duplicate')) throw accountError
+
+  const accountId = account?.id || (await sb.from('accounts').select('id').eq('slug', slug).single()).data.id
+
+  const { error: membershipError } = await sb
+    .from('dealership_users')
+    .insert({
+      account_id: accountId,
+      user_id: currentUser.id,
+      role: membershipRole,
+      full_name: fullName || currentUser.email,
+      first_name: profile.firstName,
+      last_name: profile.lastName,
+      job_title: profile.jobTitle,
+      email: currentUser.email,
+      can_invite_users: ['Owner', 'Admin', 'Manager'].includes(profile.jobTitle),
+      can_manage_permissions: ['Owner', 'Admin'].includes(profile.jobTitle),
+      can_connect_bank_accounts: ['Owner', 'Admin', 'Manager'].includes(profile.jobTitle),
+      can_view_bank_balances: ['Owner', 'Admin', 'Manager'].includes(profile.jobTitle),
+      can_reconcile_transactions: true,
+      inbox_visibility_scope: profile.jobTitle === 'Sales' ? 'own' : 'all',
+      spending_visibility_scope: profile.jobTitle === 'Sales' ? 'own' : 'all',
+      active: true
+    })
+  if(membershipError && !String(membershipError.message).toLowerCase().includes('duplicate')) throw membershipError
+  clearPendingSignupProfile()
+  return accountId
+}
+
+// Finexer customer creation is now handled by the Supabase edge function
+
+async function maybeAcceptInvite(){
+  const email = currentUser?.email?.toLowerCase()
+  if(!email) return
+
+  const existingMembership = await sb
+    .from('dealership_users')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .limit(1)
+    .maybeSingle()
+  if(existingMembership.data) return
+
+  const { data: invite, error } = await sb
+    .from('company_invites')
+    .select('*')
+    .eq('email', email)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if(error || !invite) return
+
+  const firstName = currentUser.user_metadata?.first_name || invite.first_name || ''
+  const lastName = currentUser.user_metadata?.last_name || invite.last_name || ''
+  const fullName = currentUser.user_metadata?.full_name || [firstName, lastName].filter(Boolean).join(' ') || invite.full_name || email
+
+  const { error: membershipError } = await sb
+    .from('dealership_users')
+    .insert({
+      account_id: invite.account_id,
+      user_id: currentUser.id,
+      role: invite.role,
+      full_name: fullName,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      job_title: invite.job_title,
+      email,
+      can_invite_users: invite.can_invite_users,
+      can_manage_permissions: invite.can_manage_permissions,
+      can_connect_bank_accounts: invite.can_connect_bank_accounts,
+      can_view_bank_balances: invite.can_view_bank_balances,
+      can_reconcile_transactions: invite.can_reconcile_transactions,
+      inbox_visibility_scope: invite.inbox_visibility_scope,
+      spending_visibility_scope: invite.spending_visibility_scope,
+      active: true
+    })
+  if(membershipError) throw membershipError
+
+  await sb
+    .from('company_invites')
+    .update({
+      status: 'accepted',
+      accepted_by_user_id: currentUser.id,
+      accepted_at: new Date().toISOString()
+    })
+    .eq('id', invite.id)
+}
+
+function applyInboxPermissions(rows){
+  const scope = currentMembership?.inbox_visibility_scope || 'all'
+  if(scope === 'none') return []
+  if(scope === 'all') return rows
+  return rows.filter(row => row.assigned_user_id === currentUser.id || row.reconciled_by_user_id === currentUser.id)
+}
+
+async function loadWorkspace(){
+  if(!currentAccount?.id) return
+
+  const [bankRes, txRes, carRes, teamRes, inviteRes] = await Promise.all([
+    sb.from('bank_accounts').select('*').eq('account_id', currentAccount.id).order('created_at', { ascending: true }),
+    sb.from('transactions_inbox').select('*').eq('account_id', currentAccount.id).order('transaction_date', { ascending: false }),
+    sb.from('cars').select('*').eq('account_id', currentAccount.id).order('created_at', { ascending: false }),
+    sb.from('dealership_users').select('*').eq('account_id', currentAccount.id).order('created_at', { ascending: true }),
+    sb.from('company_invites').select('*').eq('account_id', currentAccount.id).order('created_at', { ascending: false })
+  ])
+  if(bankRes.error) throw bankRes.error
+  if(txRes.error) throw txRes.error
+  if(carRes.error) throw carRes.error
+  if(teamRes.error) throw teamRes.error
+  if(inviteRes.error) throw inviteRes.error
+
+  bankAccounts = bankRes.data || []
+  cars = carRes.data || []
+  dealershipUsers = teamRes.data || []
+  companyInvites = inviteRes.data || []
+  inboxRows = applyInboxPermissions(txRes.data || [])
+
+  renderDashboard()
+  populateAccountFilter()
+  applyFilters()
+  renderTeam()
+  renderSettings()
+}
+
+function renderDashboard(){
+  const onboardingState = currentAccount?.onboarding_status || 'connect_bank'
+  const bankStage = onboardingState === 'connect_bank' || !bankAccounts.length
+  const teamStage = onboardingState === 'invite_team' && bankAccounts.length > 0
+  const onboardingVisible = bankStage || teamStage
+  document.getElementById('onboarding-shell').classList.toggle('hidden', !onboardingVisible)
+  document.getElementById('dashboard-live').classList.toggle('hidden', onboardingVisible)
+  document.getElementById('bank-onboarding-stage').classList.toggle('hidden', !bankStage)
+  document.getElementById('team-onboarding-stage').classList.toggle('hidden', !teamStage)
+  document.getElementById('step-bank').classList.toggle('active', bankStage)
+  document.getElementById('step-team').classList.toggle('active', teamStage || (!onboardingVisible && bankAccounts.length > 0))
+  document.getElementById('continue-to-team-btn').classList.toggle('hidden', !bankAccounts.length)
+  document.getElementById('onboarding-copy').textContent = bankStage
+    ? (currentMembership?.can_connect_bank_accounts
+        ? 'Connect every business bank account here, choose how far back to pull the feed, then move on to the invite stage.'
+        : 'A manager needs to connect the company bank accounts before this user can move into the live inbox.')
+    : 'The bank feeds are connected. Invite the team now, or skip and bring people in later from the Team area.'
+
+  // Show/hide connect bank button and sync button based on connection/account state
+  const connectBankCard = document.querySelector('#bank-onboarding-stage .bank-card:first-child')
+  const connectedBanksList = document.getElementById('connected-banks-list')
+  const syncBtn = document.getElementById('sync-accounts-btn')
+  
+  // Check if there's a bank connection (even if no accounts synced yet)
+  const hasBankConnection = currentAccount?.finexer_customer_id
+  
+  if(!bankAccounts.length){
+    if(hasBankConnection){
+      // Has connection but no accounts yet - hide connect button, show sync button
+      if(connectBankCard) connectBankCard.style.display = 'none'
+      if(syncBtn) syncBtn.style.display = 'block'
+      connectedBanksList.innerHTML = `<div class="queue-item"><div><div class="queue-item-title">⏳ Bank connected - accounts pending sync</div><div class="queue-item-sub">Click "Sync Accounts" below to load your bank accounts and transactions.</div></div></div>`
+    } else {
+      // No connection - show connect button
+      if(connectBankCard) connectBankCard.style.display = 'block'
+      if(syncBtn) syncBtn.style.display = 'none'
+      connectedBanksList.innerHTML = `<div class="queue-item"><div><div class="queue-item-title">No bank accounts connected yet</div><div class="queue-item-sub">Add your first account to continue onboarding.</div></div></div>`
+    }
+  } else {
+    // Has accounts - hide connect button, hide sync button (webhook handles updates), show account list with balances
+    if(connectBankCard) connectBankCard.style.display = 'none'
+    if(syncBtn) syncBtn.style.display = 'none'
+    connectedBanksList.innerHTML = bankAccounts.map(account => `
+      <div class="queue-item">
+        <div>
+          <div class="queue-item-title">${escapeHtml(account.account_name)}</div>
+          <div class="queue-item-sub">${escapeHtml(account.account_type || 'bank')} · ${escapeHtml(account.account_subtype || 'current')}</div>
+        </div>
+        <div style="font-weight:600;font-size:15px">${fmtMoney(account.current_balance)}</div>
+      </div>
+    `).join('')
+  }
+  document.getElementById('connected-banks-review-list').innerHTML = bankAccounts.length ? bankAccounts.map(account => `
+    <div class="queue-item">
+      <div>
+        <div class="queue-item-title">${escapeHtml(account.account_name)}</div>
+        <div class="queue-item-sub">${escapeHtml(account.account_subtype || account.account_type || 'bank')} · ${fmtMoney(account.current_balance)}</div>
+      </div>
+      <div class="pill">${escapeHtml(account.last_feed_sync_at ? `Synced ${new Date(account.last_feed_sync_at).toLocaleDateString('en-GB')}` : 'Pending sync')}</div>
+    </div>
+  `).join('') : `<div class="queue-item"><div><div class="queue-item-title">No feed accounts yet</div><div class="queue-item-sub">Connect at least one account before moving to team setup.</div></div></div>`
+
+  const counts = inboxRows.reduce((acc,row)=>{
+    const status = row.reconciliation_status || 'new'
+    acc[status] = (acc[status] || 0) + 1
+    return acc
+  },{})
+  const liveBalance = bankAccounts.reduce((sum, account) => sum + Number(account.current_balance || 0), 0)
+  document.getElementById('metric-new').textContent = counts.new || 0
+  document.getElementById('metric-review').textContent = (counts.suggested || 0) + (counts.needs_review || 0)
+  document.getElementById('metric-reconciled').textContent = counts.reconciled || 0
+  document.getElementById('metric-balance').textContent = fmtMoney(liveBalance)
+
+  const recent = inboxRows.slice(0,4)
+  document.getElementById('recent-feed-list').innerHTML = recent.length ? recent.map(row => `
+    <div class="queue-item">
+      <div>
+        <div class="queue-item-title">${escapeHtml(row.merchant_name || row.reference || row.description || 'Untitled transaction')}</div>
+        <div class="queue-item-sub">${escapeHtml(row.bank_account_name || 'Account')} · ${escapeHtml(row.transaction_date || '')}</div>
+      </div>
+      <div class="tx-amount ${row.direction === 'in' ? 'in' : 'out'}">${row.direction === 'in' ? '+' : '-'}${fmtMoney(Math.abs(Number(row.amount || 0)))}</div>
+    </div>
+  `).join('') : `<div class="queue-item"><div><div class="queue-item-title">No feed activity yet</div><div class="queue-item-sub">Connect a bank account to seed the first transaction stream.</div></div></div>`
+}
+
+function populateAccountFilter(){
+  const select = document.getElementById('account-filter')
+  const currentValue = select.value
+  select.innerHTML = `<option value="">All accounts</option>${bankAccounts.map(account => `<option value="${account.id}">${escapeHtml(account.account_name)}</option>`).join('')}`
+  select.value = currentValue
+}
+
+let transactionPage = 0
+const transactionsPerPage = 50
+let isLoadingMore = false
+
+function loadMoreTransactions(){
+  if(isLoadingMore) return
+  if((transactionPage + 1) * transactionsPerPage >= filteredRows.length) return
+  
+  isLoadingMore = true
+  transactionPage++
+  renderTransactions(true)
+  isLoadingMore = false
+}
+
+function applyFilters(){
+  const status = document.getElementById('status-filter').value
+  const direction = document.getElementById('direction-filter').value
+  const accountId = document.getElementById('account-filter').value
+  const resolution = document.getElementById('type-filter').value
+  const search = document.getElementById('search-input').value.trim().toLowerCase()
+  const dateFrom = document.getElementById('date-from-inbox')?.value || document.getElementById('date-from-reconciled')?.value
+  const dateTo = document.getElementById('date-to-inbox')?.value || document.getElementById('date-to-reconciled')?.value
+  const sortBy = document.getElementById('sort-filter-inbox')?.value || document.getElementById('sort-filter-reconciled')?.value || 'recent'
+
+  filteredRows = inboxRows.filter(row => {
+    if(status && row.reconciliation_status !== status) return false
+    if(direction && row.direction !== direction) return false
+    if(accountId && String(row.bank_account_id) !== String(accountId)) return false
+    if(resolution && (row.resolution_type || '') !== resolution) return false
+    if(dateFrom && row.transaction_date < dateFrom) return false
+    if(dateTo && row.transaction_date > dateTo) return false
+    if(search){
+      const haystack = [row.merchant_name,row.reference,row.description,row.counterparty_name,row.bank_account_name].join(' ').toLowerCase()
+      if(!haystack.includes(search)) return false
+    }
+    return true
+  })
+  
+  // Sort transactions
+  filteredRows.sort((a, b) => {
+    if(sortBy === 'oldest') return (a.transaction_date || '').localeCompare(b.transaction_date || '')
+    if(sortBy === 'amount-high') return Math.abs(b.amount || 0) - Math.abs(a.amount || 0)
+    if(sortBy === 'amount-low') return Math.abs(a.amount || 0) - Math.abs(b.amount || 0)
+    return (b.transaction_date || '').localeCompare(a.transaction_date || '') // Default: recent/latest first
+  })
+  
+  transactionPage = 0
+  renderTransactions()
+}
+
+function renderTransactions(append = false){
+  const tbody = document.getElementById('inbox-body')
+  
+  if(!filteredRows.length){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No transactions match the current filters.</td></tr>`
+    return
+  }
+  
+  const start = transactionPage * transactionsPerPage
+  const end = start + transactionsPerPage
+  const pageRows = filteredRows.slice(start, end)
+  
+  if(!append) {
+    tbody.innerHTML = ''
+  }
+  
+  tbody.innerHTML += pageRows.map(row => `
+    <tr>
+      <td>
+        <div style="font-size:13px;color:var(--ink-2)">${escapeHtml(formatDate(row.transaction_date))}</div>
+      </td>
+      <td>
+        <div class="cell-merchant">${escapeHtml(row.merchant_name || row.reference || row.description || 'Untitled transaction')}</div>
+        <div class="cell-merchant-sub">${escapeHtml(row.reference || row.description || 'No reference')}</div>
+      </td>
+      <td><div style="font-size:13px;color:var(--ink-2)">${escapeHtml(row.bank_account_name || 'Unknown account')}</div></td>
+      <td style="text-align:right"><span class="cell-amount ${row.direction === 'in' ? 'in' : 'out'}">${row.direction === 'in' ? '+' : '-'}${fmtMoney(Math.abs(Number(row.amount || 0)))}</span></td>
+      <td>${statusBadge(row.reconciliation_status)}</td>
+      <td>
+        <div class="action-stack">
+          ${currentMembership?.can_reconcile_transactions ? `
+            <button class="btn-pill" type="button" onclick="quickReconcile('${row.bank_transaction_id}','expense')">Expense</button>
+            <button class="btn-pill" type="button" onclick="quickReconcile('${row.bank_transaction_id}','income')">Income</button>
+            <button class="btn-pill" type="button" onclick="quickReconcile('${row.bank_transaction_id}','transfer')">Transfer</button>
+          ` : `<span style="font-size:12px;color:var(--muted)">Read only</span>`}
+        </div>
+      </td>
+    </tr>
+  `).join('')
+}
+
+function renderTeam(){
+  document.getElementById('invite-disabled-note').classList.toggle('hidden', !!currentMembership?.can_invite_users)
+  document.getElementById('invite-submit-btn').disabled = !currentMembership?.can_invite_users
+
+  const teamList = document.getElementById('team-list')
+  const members = dealershipUsers.map(member => `
+    <div class="member-card">
+      <div class="queue-item-title">${escapeHtml(member.full_name || member.email || 'Unnamed member')}</div>
+      <div class="queue-item-sub">${escapeHtml(member.email || '')} · ${escapeHtml(member.job_title || member.role)}</div>
+      <div class="pill-row">
+        <span class="pill">${escapeHtml(member.role)}</span>
+        <span class="pill">${escapeHtml(member.inbox_visibility_scope || 'all')} inbox</span>
+        <span class="pill">${escapeHtml(member.spending_visibility_scope || 'all')} spending</span>
+        ${member.can_reconcile_transactions ? '<span class="pill">Can reconcile</span>' : ''}
+        ${member.can_invite_users ? '<span class="pill">Can invite</span>' : ''}
+      </div>
+      ${currentMembership?.can_manage_permissions ? `
+        <div class="form-grid" style="margin-top:14px">
+          <div>
+            <label class="form-label">Inbox visibility</label>
+            <select class="form-control" onchange="updateMemberField(${member.id}, 'inbox_visibility_scope', this.value)">
+              <option value="all" ${member.inbox_visibility_scope==='all'?'selected':''}>All</option>
+              <option value="own" ${member.inbox_visibility_scope==='own'?'selected':''}>Own</option>
+              <option value="none" ${member.inbox_visibility_scope==='none'?'selected':''}>None</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Spending visibility</label>
+            <select class="form-control" onchange="updateMemberField(${member.id}, 'spending_visibility_scope', this.value)">
+              <option value="all" ${member.spending_visibility_scope==='all'?'selected':''}>All</option>
+              <option value="own" ${member.spending_visibility_scope==='own'?'selected':''}>Own</option>
+              <option value="none" ${member.spending_visibility_scope==='none'?'selected':''}>None</option>
+            </select>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('')
+  const invites = companyInvites.filter(invite => invite.status === 'pending').map(invite => `
+    <div class="member-card">
+      <div class="queue-item-title">${escapeHtml(invite.full_name || `${invite.first_name || ''} ${invite.last_name || ''}`.trim() || invite.email)}</div>
+      <div class="queue-item-sub">${escapeHtml(invite.email)} · Pending invite</div>
+      <div class="pill-row">
+        <span class="pill">${escapeHtml(invite.role)}</span>
+        <span class="pill">${escapeHtml(invite.inbox_visibility_scope)} inbox</span>
+        <span class="pill">${escapeHtml(invite.spending_visibility_scope)} spending</span>
+      </div>
+    </div>
+  `).join('')
+  teamList.innerHTML = members + invites || `<div class="queue-item"><div><div class="queue-item-title">No team members yet</div><div class="queue-item-sub">Invite users once the bank accounts are connected.</div></div></div>`
+}
+
+function renderSettings(){
+  if(!currentAccount) return
+  document.getElementById('settings-legal-name').value = currentAccount.legal_name || ''
+  document.getElementById('settings-trading-name').value = currentAccount.trading_name || ''
+  document.getElementById('settings-address').value = currentAccount.formatted_address || ''
+  document.getElementById('settings-company-phone').value = currentAccount.company_phone || ''
+  document.getElementById('settings-company-email').value = currentAccount.company_email || ''
+}
+
+async function updateMemberField(memberId, field, value){
+  if(!currentMembership?.can_manage_permissions) return
+  const { error } = await sb.from('dealership_users').update({ [field]: value }).eq('id', memberId)
+  if(error) return showToast(error.message)
+  showToast('Permissions updated')
+  await loadWorkspace()
+}
+
+async function createInvite(event){
+  event.preventDefault()
+  if(!currentMembership?.can_invite_users) return showToast('This user cannot invite team members')
+  const email = document.getElementById('invite-email').value.trim().toLowerCase()
+  if(!email) return showToast('Email is required')
+
+  const firstName = document.getElementById('invite-first-name').value.trim()
+  const lastName = document.getElementById('invite-last-name').value.trim()
+  const payload = {
+    account_id: currentAccount.id,
+    email,
+    first_name: firstName || null,
+    last_name: lastName || null,
+    full_name: [firstName,lastName].filter(Boolean).join(' ') || null,
+    job_title: document.getElementById('invite-job-title').value.trim() || null,
+    role: document.getElementById('invite-role').value,
+    inbox_visibility_scope: document.getElementById('invite-inbox-scope').value,
+    spending_visibility_scope: document.getElementById('invite-spending-scope').value,
+    can_reconcile_transactions: document.getElementById('invite-can-reconcile').checked,
+    can_connect_bank_accounts: document.getElementById('invite-can-connect-bank').checked,
+    can_invite_users: document.getElementById('invite-can-invite').checked,
+    can_manage_permissions: document.getElementById('invite-can-manage').checked,
+    can_view_bank_balances: document.getElementById('invite-can-connect-bank').checked,
+    invited_by_user_id: currentUser.id,
+    invited_by_name: currentMembership.full_name || currentUser.email,
+    status: 'pending'
+  }
+  const { error } = await sb.from('company_invites').insert(payload)
+  if(error) return showToast(error.message)
+  showToast('Invite created')
+  event.target.reset()
+  document.getElementById('invite-role').value = 'user'
+  document.getElementById('invite-inbox-scope').value = 'all'
+  document.getElementById('invite-spending-scope').value = 'all'
+  document.getElementById('invite-can-reconcile').checked = true
+  await loadWorkspace()
+}
+
+async function continueToTeamStage(){
+  if(!bankAccounts.length) return showToast('Connect at least one bank account first')
+  const { error } = await sb.from('accounts').update({ onboarding_status: 'invite_team' }).eq('id', currentAccount.id)
+  if(error) return showToast(error.message)
+  currentAccount = { ...currentAccount, onboarding_status: 'invite_team' }
+  await loadWorkspace()
+}
+
+async function finishOnboarding(){
+  const { error } = await sb.from('accounts').update({ onboarding_status: 'live' }).eq('id', currentAccount.id)
+  if(error) return showToast(error.message)
+  currentAccount = { ...currentAccount, onboarding_status: 'live' }
+  showToast('Company is live')
+  await loadWorkspace()
+}
+
+async function connectBankAccount(){
+  if(!currentMembership?.can_connect_bank_accounts) return showToast('This user cannot connect bank accounts')
+  
+  const statusEl = document.getElementById('finexer-status')
+  const btn = document.getElementById('connect-bank-btn')
+  
+  statusEl.style.display = 'block'
+  statusEl.style.background = '#dbeafe'
+  statusEl.style.color = '#1e40af'
+  statusEl.textContent = '⏳ Creating consent link...'
+  btn.disabled = true
+  
+  try {
+    const { data: { session } } = await sb.auth.getSession()
+    
+    const response = await fetch('https://aestjnijiiimduyfpdgt.supabase.co/functions/v1/finexer-create-consent-link', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        account_id: currentAccount.id,
+        return_url: window.location.origin + '/files/PitchBank_v1.html'
+      })
+    })
+    
+    const data = await response.json()
+    
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    
+    statusEl.style.background = '#d1fae5'
+    statusEl.style.color = '#065f46'
+    statusEl.innerHTML = '✅ Consent link created! Redirecting to bank selection...<br><small>After connecting, come back here and click "Sync Accounts" to load your data.</small>'
+    
+    setTimeout(() => {
+      window.location.href = data.consent_url
+    }, 2000)
+    
+  } catch (error) {
+    console.error('Finexer connection error:', error)
+    statusEl.style.background = '#fee2e2'
+    statusEl.style.color = '#991b1b'
+    statusEl.textContent = `❌ Error: ${error.message || 'Failed to create consent link'}`
+    btn.disabled = false
+    
+    // Log full error details for debugging
+    console.log('Full error details:', {
+      error,
+      currentAccount,
+      currentUser,
+      session: await sb.auth.getSession()
+    })
+  }
+}
+
+async function syncBankAccountsBackground(accountId){
+  // Hourly background sync to avoid rate limiting
+  try {
+    const { data: { session } } = await sb.auth.getSession()
+    if(!session) return
+    
+    // Check if we have a bank connection
+    const { data: connection } = await sb
+      .from('bank_connections')
+      .select('id, created_at, last_auto_synced_at')
+      .eq('account_id', accountId)
+      .eq('provider', 'finexer')
+      .single()
+    
+    if(!connection) return
+    
+    const now = new Date()
+    
+    // Check if we synced in the last 60 minutes (1 hour) to avoid rate limiting
+    if(connection.last_auto_synced_at){
+      const lastSyncedAt = new Date(connection.last_auto_synced_at)
+      const minutesSinceLastSync = (now - lastSyncedAt) / (1000 * 60)
+      
+      if(minutesSinceLastSync < 60){
+        console.log(`Skipping background sync - last synced ${Math.round(minutesSinceLastSync)} minutes ago`)
+        return
+      }
+    }
+    
+    console.log('Running hourly background sync...')
+    
+    const response = await fetch('https://aestjnijiiimduyfpdgt.supabase.co/functions/v1/finexer-sync-accounts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ account_id: accountId })
+    })
+    
+    const data = await response.json()
+    
+    if (!data.error) {
+      console.log('Background sync completed:', data)
+      
+      // Update last_auto_synced_at
+      await sb
+        .from('bank_connections')
+        .update({ last_auto_synced_at: now.toISOString() })
+        .eq('id', connection.id)
+      
+      if(data.accounts_synced > 0 || data.transactions_synced > 0){
+        await loadWorkspace() // Refresh data silently
+      }
+    }
+  } catch (error) {
+    console.error('Background sync failed:', error)
+  }
+}
+
+async function syncBankAccounts(btnId = 'sync-accounts-btn', statusId = null){
+  const btn = document.getElementById(btnId)
+  if (!btn) return
+  const originalText = btn.textContent
+  btn.disabled = true
+  btn.textContent = '⏳ Syncing...'
+  
+  const statusEl = statusId ? document.getElementById(statusId) : null
+  if(statusEl) statusEl.textContent = '⏳ Syncing...'
+  
+  try {
+    const { data: { session } } = await sb.auth.getSession()
+    
+    const response = await fetch('https://aestjnijiiimduyfpdgt.supabase.co/functions/v1/finexer-sync-accounts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        account_id: currentAccount.id
+      })
+    })
+    
+    const data = await response.json()
+    
+    if (data.error) {
+      throw new Error(data.error)
+    }
+    
+    const message = `✅ Synced ${data.accounts_synced || 0} accounts and ${data.transactions_synced || 0} transactions`
+    showToast(message)
+    if(statusEl) statusEl.textContent = message
+    await loadWorkspace()
+    
+  } catch (error) {
+    const errorMsg = `❌ Sync failed: ${error.message}`
+    showToast(errorMsg)
+    if(statusEl) statusEl.textContent = errorMsg
+    btn.disabled = false
+    btn.textContent = originalText
+  }
+}
+
+async function ensureReconciliation(bankTransactionId, values = {}){
+  const existing = inboxRows.find(row => row.bank_transaction_id === bankTransactionId)
+  const payload = {
+    account_id: currentAccount.id,
+    bank_transaction_id: bankTransactionId,
+    status: 'needs_review',
+    ...values
+  }
+  if(existing?.reconciliation_id){
+    const { data, error } = await sb.from('reconciliations').update(payload).eq('id', existing.reconciliation_id).select().single()
+    if(error) throw error
+    return data
+  }
+  const { data, error } = await sb.from('reconciliations').insert(payload).select().single()
+  if(error) throw error
+  return data
+}
+
+async function quickReconcile(bankTransactionId, resolutionType){
+  if(!currentMembership?.can_reconcile_transactions) return
+  try{
+    await ensureReconciliation(bankTransactionId, {
+      resolution_type: resolutionType,
+      status: 'reconciled',
+      reconciled_by_user_id: currentUser.id,
+      reconciled_at: new Date().toISOString()
+    })
+    showToast(`${formatStatus(resolutionType)} saved`)
+    await loadWorkspace()
+  }catch(error){
+    showToast(error.message)
+  }
+}
+
+async function quickIgnore(bankTransactionId){
+  if(!currentMembership?.can_reconcile_transactions) return
+  try{
+    await ensureReconciliation(bankTransactionId, {
+      resolution_type: 'ignore',
+      status: 'ignored',
+      reconciled_by_user_id: currentUser.id,
+      reconciled_at: new Date().toISOString()
+    })
+    showToast('Transaction ignored')
+    await loadWorkspace()
+  }catch(error){
+    showToast(error.message)
+  }
+}
+
+function buildSplitLine(line = {}){
+  const wrapper = document.createElement('div')
+  wrapper.className = 'bank-card'
+  wrapper.innerHTML = `
+    <div class="form-grid three">
+      <div>
+        <label class="form-label">Type</label>
+        <select class="form-control split-type">
+          <option value="expense" ${line.split_type==='expense'?'selected':''}>Expense</option>
+          <option value="income" ${line.split_type==='income'?'selected':''}>Income</option>
+          <option value="transfer" ${line.split_type==='transfer'?'selected':''}>Transfer</option>
+          <option value="ignore" ${line.split_type==='ignore'?'selected':''}>Ignore</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Category</label>
+        <input class="form-control split-category" type="text" value="${escapeHtml(line.category || '')}">
+      </div>
+      <div>
+        <label class="form-label">Amount</label>
+        <input class="form-control split-amount" type="number" min="0" step="0.01" value="${Number(line.amount || 0) || ''}">
+      </div>
+      <div>
+        <label class="form-label">Vehicle</label>
+        <select class="form-control split-car">
+          <option value="">None</option>
+          ${cars.map(car => `<option value="${car.id}" ${String(line.car_id || '')===String(car.id)?'selected':''}>${escapeHtml(car.stock_number || car.reg || `${car.make || ''} ${car.model || ''}`.trim() || `Car ${car.id}`)}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Reference</label>
+        <input class="form-control split-reference" type="text" value="${escapeHtml(line.reference || '')}">
+      </div>
+      <div>
+        <label class="form-label">Description</label>
+        <input class="form-control split-description" type="text" value="${escapeHtml(line.description || '')}">
+      </div>
+    </div>
+    <div class="modal-footer" style="padding:14px 0 0;border-top:none;justify-content:flex-start">
+      <button class="btn-secondary remove-split-btn" type="button">Remove line</button>
+    </div>
+  `
+  wrapper.querySelector('.remove-split-btn').addEventListener('click', () => {
+    wrapper.remove()
+    updateSplitTotals()
+  })
+  wrapper.querySelector('.split-amount').addEventListener('input', updateSplitTotals)
+  return wrapper
+}
+
+function getSplitTargetAmount(){
+  return Math.abs(Number(splitContext?.amount || 0))
+}
+
+function updateSplitTotals(){
+  const lines = [...document.querySelectorAll('#split-lines .bank-card')]
+  const total = lines.reduce((sum, line) => sum + Number(line.querySelector('.split-amount').value || 0), 0)
+  const remaining = getSplitTargetAmount() - total
+  document.getElementById('split-total').textContent = Math.abs(remaining) < 0.005 && lines.length
+    ? `Allocated ${fmtMoney(total)} · Split total matches transaction`
+    : `Allocated ${fmtMoney(total)} · Remaining ${fmtMoney(remaining)}`
+}
+
+async function openSplitModal(bankTransactionId){
+  if(!currentMembership?.can_reconcile_transactions) return
+  splitContext = inboxRows.find(row => row.bank_transaction_id === bankTransactionId)
+  if(!splitContext) return
+  document.getElementById('split-original-amount').value = fmtMoney(splitContext.amount)
+  document.getElementById('split-original-reference').value = splitContext.reference || splitContext.description || ''
+  document.getElementById('split-lines').innerHTML = ''
+  document.getElementById('modal-split-transaction').classList.add('open')
+
+  const existingReconciliation = await ensureReconciliation(bankTransactionId, { resolution_type: 'split', status: 'needs_review' })
+  const { data: existingSplits } = await sb.from('reconciliation_splits').select('*').eq('reconciliation_id', existingReconciliation.id).order('sort_order')
+  const lines = existingSplits?.length ? existingSplits : [{ amount: getSplitTargetAmount(), split_type: splitContext.direction === 'in' ? 'income' : 'expense' }]
+  lines.forEach(line => document.getElementById('split-lines').appendChild(buildSplitLine(line)))
+  updateSplitTotals()
+}
+
+function closeSplitModal(){
+  document.getElementById('modal-split-transaction').classList.remove('open')
+  splitContext = null
+}
+
+async function saveSplits(){
+  if(!splitContext) return
+  const lines = [...document.querySelectorAll('#split-lines .bank-card')]
+  if(!lines.length) return showToast('Add at least one split line')
+  const payload = lines.map((line,index)=>({
+    sort_order:index,
+    split_type:line.querySelector('.split-type').value,
+    category:line.querySelector('.split-category').value.trim() || null,
+    car_id:line.querySelector('.split-car').value || null,
+    amount:Number(line.querySelector('.split-amount').value || 0),
+    reference:line.querySelector('.split-reference').value.trim() || null,
+    description:line.querySelector('.split-description').value.trim() || null
+  }))
+  const total = payload.reduce((sum,line)=>sum + line.amount,0)
+  if(Math.abs(total - getSplitTargetAmount()) > 0.005) return showToast('Split total must match the transaction amount')
+  if(payload.some(line => !line.amount || line.amount <= 0)) return showToast('Each split line needs a positive amount')
+
+  try{
+    const reconciliation = await ensureReconciliation(splitContext.bank_transaction_id, {
+      resolution_type: 'split',
+      status: 'reconciled',
+      reconciled_by_user_id: currentUser.id,
+      reconciled_at: new Date().toISOString()
+    })
+    await sb.from('reconciliation_splits').delete().eq('reconciliation_id', reconciliation.id)
+    const { error } = await sb.from('reconciliation_splits').insert(payload.map(line => ({
+      account_id: currentAccount.id,
+      reconciliation_id: reconciliation.id,
+      ...line
+    })))
+    if(error) throw error
+    showToast('Split saved')
+    closeSplitModal()
+    await loadWorkspace()
+  }catch(error){
+    showToast(error.message)
+  }
+}
+
+async function searchCompanyAddress(){
+  const query = document.getElementById('company-address').value.trim()
+  const dropdown = document.getElementById('company-address-suggestions')
+  if(query.length < 3){
+    dropdown.innerHTML = ''
+    dropdown.classList.remove('open')
+    return
+  }
+  clearTimeout(addressSearchTimeout)
+  addressSearchTimeout = setTimeout(async () => {
+    dropdown.innerHTML = '<div class="address-loading">Searching addresses...</div>'
+    dropdown.classList.add('open')
+    try{
+      const response = await fetch(`/api/autocomplete?input=${encodeURIComponent(query)}`)
+      const data = await response.json()
+      companyAddressPredictions = data.predictions || []
+      if(!companyAddressPredictions.length){
+        dropdown.innerHTML = `
+          <div class="address-loading">No addresses found</div>
+          <div class="address-option manual" onclick="enterAddressManually()">
+            <div class="address-option-main">Can't find address? Enter in manually</div>
+          </div>
+        `
+        return
+      }
+      dropdown.innerHTML = companyAddressPredictions.map((prediction, idx) => {
+        const terms = prediction.terms || []
+        const main = terms[0]?.value || prediction.description
+        const secondary = terms.slice(1).map(term => term.value).join(', ')
+        return `<div class="address-option" onclick="selectCompanyAddress(${idx})"><div class="address-option-main">${escapeHtml(main)}</div><div class="address-option-detail">${escapeHtml(secondary)}</div></div>`
+      }).join('') + `
+        <div class="address-option manual" onclick="enterAddressManually()">
+          <div class="address-option-main">Can't find address? Enter in manually</div>
+        </div>
+      `
+    }catch{
+      dropdown.innerHTML = `
+        <div class="address-loading">Search failed. Try again.</div>
+        <div class="address-option manual" onclick="enterAddressManually()">
+          <div class="address-option-main">Can't find address? Enter in manually</div>
+        </div>
+      `
+    }
+  }, 250)
+}
+
+async function selectCompanyAddress(index){
+  const prediction = companyAddressPredictions[index]
+  if(!prediction) return
+  const input = document.getElementById('company-address')
+  const dropdown = document.getElementById('company-address-suggestions')
+  dropdown.innerHTML = '<div class="address-loading">Getting address details...</div>'
+  try{
+    const response = await fetch(`/api/place-details?place_id=${encodeURIComponent(prediction.place_id)}`)
+    const data = await response.json()
+    const place = data.result
+    selectedCompanyPlaceDetails = place
+    input.value = place.formatted_address
+    input.dataset.placeId = prediction.place_id
+    populateStructuredAddressFields(extractAddressParts(place))
+    setCompanyAddressMode('structured', { clear: false })
+    dropdown.classList.remove('open')
+  }catch{
+    selectedCompanyPlaceDetails = null
+    input.value = prediction.description
+    input.dataset.placeId = prediction.place_id
+    populateStructuredAddressFields({
+      addressLine1: prediction.structured_formatting?.main_text || prediction.description || '',
+      addressLine2: '',
+      city: '',
+      postcode: '',
+      country: 'United Kingdom'
+    })
+    setCompanyAddressMode('structured', { clear: false })
+    dropdown.classList.remove('open')
+  }
+}
+
+function enterAddressManually(){
+  selectedCompanyPlaceDetails = null
+  document.getElementById('company-address').dataset.placeId = ''
+  if(!document.getElementById('company-country').value.trim()){
+    document.getElementById('company-country').value = 'United Kingdom'
+  }
+  setCompanyAddressMode('structured')
+  document.getElementById('company-address-line-1').focus()
+}
+
+function changeAddressSearch(){
+  setCompanyAddressMode('lookup')
+  document.getElementById('company-address').focus()
+}
+
+document.addEventListener('click', event => {
+  const dropdown = document.getElementById('company-address-suggestions')
+  if(dropdown && !event.target.closest('.address-wrap')){
+    dropdown.classList.remove('open')
+  }
+})
+
+function formatDate(dateStr){
+  if(!dateStr) return '-'
+  const date = new Date(dateStr)
+  if(isNaN(date.getTime())) return dateStr
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function statusBadge(status){
+  const statusMap = {
+    'new': '<span class="status-badge new">New</span>',
+    'pending': '<span class="status-badge pending">Pending</span>',
+    'suggested': '<span class="status-badge new">Suggested</span>',
+    'needs_review': '<span class="status-badge pending">Needs Review</span>',
+    'reconciled': '<span class="status-badge reconciled">Reconciled</span>',
+    'ignored': '<span class="status-badge" style="background:rgba(122,115,104,0.12);color:var(--muted)">Ignored</span>'
+  }
+  return statusMap[status] || `<span class="status-badge">${escapeHtml(status || 'unknown')}</span>`
+}
+
+function formatStatus(status){
+  const map = {
+    'new': 'New',
+    'pending': 'Pending',
+    'suggested': 'Suggested',
+    'needs_review': 'Needs Review',
+    'reconciled': 'Reconciled',
+    'ignored': 'Ignored',
+    'expense': 'Expense',
+    'income': 'Income',
+    'transfer': 'Transfer',
+    'split': 'Split',
+    'all': 'All',
+    'own': 'Own',
+    'none': 'None'
+  }
+  return map[status] || status
+}
+
+// Tab switching for reconciled/unreconciled
+document.querySelectorAll('[data-reconcile-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.reconcileTab
+    document.querySelectorAll('[data-reconcile-tab]').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    document.getElementById('unreconciled-tab').classList.toggle('active', tab === 'unreconciled')
+    document.getElementById('reconciled-tab').classList.toggle('active', tab === 'reconciled')
+  })
+})
+
+document.getElementById('signup-next-1').addEventListener('click', signUp)
+document.getElementById('signup-back-2').addEventListener('click', () => setSignupStage(1))
+document.getElementById('signup-next-2').addEventListener('click', continueFromRole)
+document.getElementById('signup-back-3').addEventListener('click', () => setSignupStage(2))
+document.getElementById('signup-finish-btn').addEventListener('click', finishSignupProfile)
+document.getElementById('signup-have-account-link').addEventListener('click', () => setAuthMode('signin'))
+document.getElementById('signin-create-account-link').addEventListener('click', () => setAuthMode('signup'))
+document.getElementById('signin-password-toggle').addEventListener('click', () => togglePasswordVisibility('signin-password', 'signin-password-toggle'))
+document.getElementById('signup-password-toggle').addEventListener('click', () => togglePasswordVisibility('signup-password', 'signup-password-toggle'))
+document.querySelectorAll('.role-choice').forEach(button => {
+  button.addEventListener('click', () => chooseRole(button.dataset.role))
+})
+document.getElementById('company-address').addEventListener('input', () => {
+  setCompanyAddressMode('lookup', { clear: false })
+  selectedCompanyPlaceDetails = null
+  document.getElementById('company-address').dataset.placeId = ''
+  searchCompanyAddress()
+})
+document.getElementById('change-address-btn').addEventListener('click', changeAddressSearch)
+document.getElementById('login-btn').addEventListener('click', signIn)
+document.getElementById('signout-btn').addEventListener('click', signOut)
+document.getElementById('refresh-btn').addEventListener('click', () => loadWorkspace().then(()=>showToast('Refreshed')).catch(error => showToast(error.message)))
+document.getElementById('search-input').addEventListener('input', applyFilters)
+document.getElementById('status-filter').addEventListener('change', applyFilters)
+document.getElementById('direction-filter').addEventListener('change', applyFilters)
+document.getElementById('account-filter').addEventListener('change', applyFilters)
+document.getElementById('type-filter').addEventListener('change', applyFilters)
+document.getElementById('date-from-inbox')?.addEventListener('change', applyFilters)
+document.getElementById('date-to-inbox')?.addEventListener('change', applyFilters)
+document.getElementById('sort-filter-inbox')?.addEventListener('change', applyFilters)
+document.getElementById('date-from-reconciled')?.addEventListener('change', applyFilters)
+document.getElementById('date-to-reconciled')?.addEventListener('change', applyFilters)
+document.getElementById('sort-filter-reconciled')?.addEventListener('change', applyFilters)
+document.getElementById('invite-form').addEventListener('submit', createInvite)
+document.getElementById('connect-bank-btn').addEventListener('click', connectBankAccount)
+document.getElementById('sync-accounts-btn').addEventListener('click', syncBankAccounts)
+document.getElementById('manual-sync-btn').addEventListener('click', () => syncBankAccounts('manual-sync-btn', 'manual-sync-status'))
+document.getElementById('continue-to-team-btn').addEventListener('click', continueToTeamStage)
+document.getElementById('open-team-tab-btn').addEventListener('click', () => switchTab('team'))
+document.getElementById('finish-onboarding-btn').addEventListener('click', finishOnboarding)
+document.getElementById('add-split-line-btn').addEventListener('click', () => {
+  document.getElementById('split-lines').appendChild(buildSplitLine())
+  updateSplitTotals()
+})
+document.getElementById('save-splits-btn').addEventListener('click', saveSplits)
+document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)))
+
+// Infinite scroll for transactions
+document.getElementById('inbox-scroll-container').addEventListener('scroll', (e) => {
+  const container = e.target
+  if(container.scrollTop + container.clientHeight >= container.scrollHeight - 100) {
+    loadMoreTransactions()
+  }
+})
+
+sb.auth.onAuthStateChange(() => {
+  resolveSession().catch(error => showToast(error.message))
+})
+
+setAuthMode('signin')
+handleRuntimeMessages()
+resolveSession().catch(error => showToast(error.message))
+</script>
+</body>
+</html>

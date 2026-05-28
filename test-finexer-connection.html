@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Finexer Connection</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 { color: #333; margin-bottom: 10px; }
+    .subtitle { color: #666; margin-bottom: 30px; }
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 6px;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover { background: #2563eb; }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .status {
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .success { background: #d1fae5; color: #065f46; }
+    .error { background: #fee2e2; color: #991b1b; }
+    .info { background: #dbeafe; color: #1e40af; }
+    .link {
+      display: block;
+      margin: 15px 0;
+      padding: 15px;
+      background: #fef3c7;
+      border-radius: 6px;
+      word-break: break-all;
+    }
+    .link a {
+      color: #92400e;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏦 Finexer Bank Connection Test</h1>
+    <div class="subtitle">Test the Finexer integration for Fleet OS Bank First</div>
+
+    <!-- Login Section -->
+    <div class="section" id="loginSection">
+      <h2>Step 1: Login</h2>
+      <input type="email" id="email" placeholder="Email" value="max@thgautomotive.com">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <div id="loginStatus"></div>
+    </div>
+
+    <!-- Connect Bank Section -->
+    <div class="section" id="connectSection" style="display:none;">
+      <h2>Step 2: Connect Bank</h2>
+      <p>Account ID: <input type="number" id="accountId" value="1" style="width: 100px;"></p>
+      <button onclick="createConsentLink()">Create Consent Link</button>
+      <div id="connectStatus"></div>
+      <div id="consentLink"></div>
+    </div>
+
+    <!-- Sync Section -->
+    <div class="section" id="syncSection" style="display:none;">
+      <h2>Step 3: Manual Sync (Optional)</h2>
+      <button onclick="syncAccounts()">Sync Bank Accounts</button>
+      <div id="syncStatus"></div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://aestjnijiiimduyfpdgt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlc3RqbmlqaWlpbWR1eWZwZGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NjE0MDAsImV4cCI6MjA5NTAzNzQwMH0._DHvR-RNx-IZrOhWf5d2PFlQZv8ODprMbjCENHMsNAA';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentUser = null;
+
+    // Check if already logged in
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+        showStatus('loginStatus', `✅ Already logged in as ${currentUser.email}`, 'success');
+        document.getElementById('connectSection').style.display = 'block';
+        document.getElementById('syncSection').style.display = 'block';
+      }
+    }
+
+    // Login
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      showStatus('loginStatus', '⏳ Logging in...', 'info');
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+
+        currentUser = data.user;
+        showStatus('loginStatus', `✅ Logged in as ${currentUser.email}`, 'success');
+        document.getElementById('connectSection').style.display = 'block';
+        document.getElementById('syncSection').style.display = 'block';
+      } catch (error) {
+        showStatus('loginStatus', `❌ Login failed: ${error.message}`, 'error');
+      }
+    }
+
+    // Create Consent Link
+    async function createConsentLink() {
+      const accountId = parseInt(document.getElementById('accountId').value);
+      showStatus('connectStatus', '⏳ Creating consent link...', 'info');
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/finexer-create-consent-link`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            account_id: accountId,
+            return_url: window.location.origin + '/callback.html'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        showStatus('connectStatus', '✅ Consent link created!', 'success');
+        
+        document.getElementById('consentLink').innerHTML = `
+          <div class="link">
+            <strong>🔗 Click this link to connect your bank:</strong><br>
+            <a href="${data.consent_url}" target="_blank">${data.consent_url}</a>
+          </div>
+          <div class="info status">
+            <strong>Details:</strong><br>
+            Consent Link ID: ${data.consent_link_id}<br>
+            Connection ID: ${data.connection_id}<br>
+            Expires: ${data.expires_at}
+          </div>
+        `;
+      } catch (error) {
+        showStatus('connectStatus', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Sync Accounts
+    async function syncAccounts() {
+      const accountId = parseInt(document.getElementById('accountId').value);
+      showStatus('syncStatus', '⏳ Syncing bank accounts...', 'info');
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/finexer-sync-accounts`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ account_id: accountId })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        showStatus('syncStatus', 
+          `✅ Sync complete!\n` +
+          `Synced ${data.synced_accounts} bank accounts\n` +
+          `Synced ${data.synced_transactions} transactions`, 
+          'success'
+        );
+      } catch (error) {
+        showStatus('syncStatus', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Helper function
+    function showStatus(elementId, message, type) {
+      const el = document.getElementById(elementId);
+      el.innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+
+    // Check session on load
+    checkSession();
+  </script>
+</body>
+</html>
