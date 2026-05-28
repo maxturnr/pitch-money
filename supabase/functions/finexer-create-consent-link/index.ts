@@ -1,6 +1,14 @@
 // ═══════════════════════════════════════════════════════════
 // FINEXER: CREATE CONSENT LINK
-// Creates a consent link for a user to connect their bank account
+// Creates a consent for a user to connect their bank account
+//
+// Flow:
+//   1. Frontend calls this with account_id + return_url
+//   2. We find/create Finexer customer
+//   3. Create consent via POST /consents with scopes + retro_date
+//   4. Return consent URL → frontend redirects user to bank auth page
+//   5. After user authorizes → bank redirects to return_url
+//   6. Webhook fires consent.authorized → triggers sync
 // ═══════════════════════════════════════════════════════════
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -13,13 +21,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -30,7 +36,7 @@ serve(async (req) => {
       }
     );
 
-    // Get authenticated user
+    // Authenticate user
     const {
       data: { user },
       error: authError,
@@ -43,8 +49,7 @@ serve(async (req) => {
       );
     }
 
-    // Get request body
-    const { account_id, return_url } = await req.json();
+    const { account_id, return_url, history_days } = await req.json();
 
     if (!account_id) {
       return new Response(
@@ -53,7 +58,7 @@ serve(async (req) => {
       );
     }
 
-    // Get account details
+    // Get account
     const { data: account, error: accountError } = await supabaseClient
       .from('accounts')
       .select('*')
@@ -67,15 +72,14 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Finexer client
     const finexer = createFinexerClient();
 
-    // Create or get Finexer customer
+    // ── Find or create Finexer customer ──────────────────────────────
     let finexerCustomerId = account.finexer_customer_id;
 
     if (!finexerCustomerId) {
       console.log('Creating Finexer customer for account:', account_id);
-      
+
       const customer = await finexer.createCustomer({
         name: account.dealer_name || account.legal_name || 'Unknown',
         email: account.primary_email || user.email!,
@@ -88,7 +92,7 @@ serve(async (req) => {
 
       finexerCustomerId = customer.id;
 
-      // Store Finexer customer ID
+      // Store Finexer customer ID on the account
       await supabaseClient
         .from('accounts')
         .update({ finexer_customer_id: finexerCustomerId })
@@ -97,46 +101,65 @@ serve(async (req) => {
       console.log('Created Finexer customer:', finexerCustomerId);
     }
 
-    // Create consent link
-    console.log('Creating consent link for customer:', finexerCustomerId);
-    
-    // Finexer requires HTTPS URLs only
-    // Use provided return_url if it's HTTPS, otherwise use APP_URL or a placeholder
+    // ── Calculate retro_date ─────────────────────────────────────────
+    // retro_date is a YYYY-MM-DD string that tells Finexer how far back
+    // to pull transaction history. Default 90 days, max ~2 years.
+    const historyWindow = Math.max(30, Math.min(730, Number(history_days || 365)));
+    const retroDate = new Date();
+    retroDate.setDate(retroDate.getDate() - historyWindow);
+    const retroDateStr = retroDate.toISOString().slice(0, 10);
+
+    // ── Build return URL ─────────────────────────────────────────────
+    // Finexer requires HTTPS return URLs
     let finalReturnUrl = return_url;
     if (!finalReturnUrl || !finalReturnUrl.startsWith('https://')) {
       const appUrl = Deno.env.get('APP_URL') || '';
-      finalReturnUrl = appUrl.startsWith('https://') 
+      finalReturnUrl = appUrl.startsWith('https://')
         ? `${appUrl}/banking/callback`
-        : 'https://example.com/banking/callback'; // Placeholder for local testing
+        : 'https://example.com/banking/callback';
     }
-    
-    const consentLink = await finexer.createConsentLink({
+
+    // ── Create consent ───────────────────────────────────────────────
+    // POST /consents (form-encoded)
+    // • customer — Finexer customer ID
+    // • scopes[] — CRITICAL: accounts, balance, transactions
+    // • return_url — where Finexer redirects user after bank auth
+    // • retro_date — YYYY-MM-DD, how far back to pull history
+    console.log('Creating consent for customer:', finexerCustomerId);
+
+    const consent = await finexer.createConsent({
       customer: finexerCustomerId,
-      type: 'multiple', // Allow multiple bank connections
-      expiry_days: 90, // Standard UK Open Banking
-      retro_days: 730, // 2 years of historical data
       scopes: ['accounts', 'balance', 'transactions'],
       return_url: finalReturnUrl,
+      retro_date: retroDateStr,
       metadata: {
         fleet_os_account_id: account_id.toString(),
         created_by_user_id: user.id,
       },
     });
 
-    console.log('Created consent link:', consentLink.id);
+    console.log('Created consent:', consent.id);
 
-    // Store or update consent link in database
+    // Extract consent URL — path is response.redirect.consent_url
+    const consentUrl = consent?.redirect?.consent_url;
+    if (!consentUrl) {
+      console.error('Finexer consent response:', JSON.stringify(consent));
+      throw new Error('Finexer did not return a consent URL');
+    }
+
+    // ── Store connection in DB ───────────────────────────────────────
     const { data: connection, error: connectionError } = await supabaseClient
       .from('bank_connections')
       .upsert({
         account_id: account_id,
         provider: 'finexer',
         provider_customer_id: finexerCustomerId,
-        provider_connection_id: consentLink.id,
-        consent_link_id: consentLink.id,
-        consent_link_url: consentLink.redirect?.consent_url,
-        consent_link_expires_at: consentLink.expires_at,
+        provider_connection_id: consent.id,
+        consent_link_id: consent.id,
+        consent_link_url: consentUrl,
+        consent_link_expires_at: consent.expires_at,
         status: 'pending',
+        last_error: null,
       }, {
         onConflict: 'account_id,provider',
       })
@@ -146,44 +169,47 @@ serve(async (req) => {
     if (connectionError) {
       console.error('Error storing connection:', connectionError);
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: `Database error: ${connectionError.message || 'Failed to store connection'}`,
           details: connectionError,
-          hint: connectionError.hint,
-          code: connectionError.code,
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Return consent URL to frontend
+    // Store consent record
+    await supabaseClient
+      .from('bank_consents')
+      .upsert({
+        account_id: account_id,
+        bank_connection_id: connection.id,
+        provider: 'finexer',
+        provider_consent_id: consent.id,
+        finexer_consent_id: consent.id,
+        status: 'pending',
+        expires_at: consent.expires_at,
+        raw_payload: consent,
+      }, {
+        onConflict: 'provider,provider_consent_id',
+      });
+
     return new Response(
       JSON.stringify({
         success: true,
-        consent_url: consentLink.redirect?.consent_url,
-        consent_link_id: consentLink.id,
+        consent_url: consentUrl,
+        consent_id: consent.id,
         connection_id: connection.id,
-        expires_at: consentLink.expires_at,
+        expires_at: consent.expires_at,
       }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-  } catch (error) {
-    console.error('Error creating consent link:', error);
-    console.error('Error stack:', error.stack);
-    console.error('Error details:', {
-      message: error.message,
-      name: error.name,
-      cause: error.cause,
-    });
-    
+  } catch (error: any) {
+    console.error('Error creating consent:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Internal server error',
-        details: error.stack,
-      }),
+      JSON.stringify({ error: error.message || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

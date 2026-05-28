@@ -1,6 +1,19 @@
 // ═══════════════════════════════════════════════════════════
 // FINEXER API CLIENT
 // Shared utility for making authenticated requests to Finexer API
+//
+// Finexer API facts:
+//   • Base URL: https://api.finexer.com
+//   • Auth: HTTP Basic Auth — API key as username, empty password
+//   • POST body: application/x-www-form-urlencoded (NOT JSON)
+//   • Responses: JSON
+//   • Pagination: follow paging.next until null (default 20/page)
+//   • Bank sync rate limit: 1 call/hour/account
+//   • Consent expiry: 90-day re-confirmation required
+//   • Webhooks: consent.authorized, bank_account.created,
+//     consent.canceled, consent.expired, consent.failed,
+//     reminder.consent_expiry.sent
+//   • NO transaction.created webhook — must poll via sync
 // ═══════════════════════════════════════════════════════════
 
 const FINEXER_API_BASE = 'https://api.finexer.com';
@@ -17,36 +30,72 @@ export class FinexerClient {
   }
 
   /**
-   * Make authenticated request to Finexer API
+   * Make authenticated request to Finexer API.
+   * Supports both relative paths and full URLs (for pagination paging.next).
    */
-  async request<T>(
+  async request<T = any>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${FINEXER_API_BASE}${endpoint}`;
-    
-    // HTTP Basic Auth with API key as username
+    const url = endpoint.startsWith('http')
+      ? endpoint
+      : `${FINEXER_API_BASE}${endpoint}`;
+
+    // HTTP Basic Auth: API key as username, empty password
     const auth = btoa(`${this.apiKey}:`);
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
         ...options.headers,
       },
     });
 
+    if (response.status === 204) return null as T;
+
+    const text = await response.text();
+    let payload: any;
+    try { payload = text ? JSON.parse(text) : null; } catch { payload = text; }
+
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Finexer API Error (${response.status}): ${error}`);
+      const msg = payload?.error?.message || payload?.error || text || `Finexer ${response.status}`;
+      throw new Error(`Finexer API Error (${response.status}): ${msg}`);
     }
 
-    return response.json();
+    return payload;
   }
 
+  // ─── Pagination helper ──────────────────────────────────────────────
+
   /**
-   * Create a Finexer customer
+   * Fetch ALL pages from a Finexer list endpoint.
+   * Follows paging.next until null. Returns flat array of all items.
+   */
+  async getAll<T = any>(path: string): Promise<T[]> {
+    const allItems: T[] = [];
+    let nextPath: string | null = path;
+
+    while (nextPath) {
+      const res = await this.request<any>(nextPath);
+      const items = res?.data || [];
+      allItems.push(...items);
+      nextPath = res?.paging?.next || null;
+
+      // Safety limit
+      if (allItems.length > 50_000) break;
+    }
+
+    return allItems;
+  }
+
+  // ─── Customer endpoints ─────────────────────────────────────────────
+
+  /**
+   * Create a Finexer customer.
+   * POST /customers (form-encoded)
    */
   async createCustomer(data: {
     name: string;
@@ -72,101 +121,103 @@ export class FinexerClient {
     });
   }
 
-  /**
-   * Get a Finexer customer
-   */
   async getCustomer(customerId: string) {
     return this.request(`/customers/${customerId}`);
   }
 
+  // ─── Consent endpoints ──────────────────────────────────────────────
+
   /**
-   * Create a consent link
+   * Create a consent for a customer to authorize bank access.
+   * POST /consents (form-encoded)
+   *
+   * Required: customer, return_url
+   * Important: scopes[] = accounts, balance, transactions
+   * Optional: retro_date (YYYY-MM-DD — how far back to pull history)
    */
-  async createConsentLink(data: {
+  async createConsent(data: {
     customer: string;
-    type?: 'single' | 'multiple';
-    expiry_days?: number;
-    retro_days?: number;
+    return_url: string;
     scopes?: string[];
-    return_url?: string;
+    retro_date?: string;
+    expiry_date?: string;
+    provider?: string;
     metadata?: Record<string, string>;
   }) {
     const body = new URLSearchParams();
     body.append('customer', data.customer);
-    if (data.type) body.append('type', data.type);
-    if (data.expiry_days) body.append('expiry_days', data.expiry_days.toString());
-    if (data.retro_days) body.append('retro_days', data.retro_days.toString());
-    if (data.return_url) body.append('return_url', data.return_url);
-    
+    body.append('return_url', data.return_url);
+
+    // Scopes — critical: without these, Finexer won't grant transaction access
     if (data.scopes && data.scopes.length > 0) {
       data.scopes.forEach(scope => body.append('scopes[]', scope));
     }
-    
+
+    // retro_date — YYYY-MM-DD format, controls historical transaction depth
+    if (data.retro_date) body.append('retro_date', data.retro_date);
+    if (data.expiry_date) body.append('expiry_date', data.expiry_date);
+    if (data.provider) body.append('provider', data.provider);
+
     if (data.metadata) {
       Object.entries(data.metadata).forEach(([key, value]) => {
         body.append(`metadata[${key}]`, value);
       });
     }
 
-    return this.request('/consent_links', {
+    return this.request('/consents', {
       method: 'POST',
       body: body.toString(),
     });
   }
 
-  /**
-   * Get a consent link
-   */
-  async getConsentLink(consentLinkId: string) {
-    return this.request(`/consent_links/${consentLinkId}`);
-  }
-
-  /**
-   * Get a consent
-   */
   async getConsent(consentId: string) {
     return this.request(`/consents/${consentId}`);
   }
 
-  /**
-   * List consents for a customer
-   */
-  async listConsents(params: {
-    customer?: string;
-    status?: string;
-  } = {}) {
+  async listConsents(params: { customer?: string; status?: string } = {}) {
     const query = new URLSearchParams();
     if (params.customer) query.append('customer', params.customer);
     if (params.status) query.append('status', params.status);
-    
-    const queryString = query.toString();
-    return this.request(`/consents${queryString ? '?' + queryString : ''}`);
+    const qs = query.toString();
+    return this.request(`/consents${qs ? '?' + qs : ''}`);
   }
 
+  // ─── Bank account endpoints ─────────────────────────────────────────
+
   /**
-   * List bank accounts for a customer
+   * List bank accounts for a customer.
+   * GET /bank_accounts?customer={id}
+   * NOTE: NOT /customers/{id}/bank_accounts — that endpoint does NOT exist.
    */
-  async listBankAccounts(params: {
-    customer?: string;
-    consent?: string;
-  } = {}) {
+  async listBankAccounts(params: { customer?: string; consent?: string } = {}) {
     const query = new URLSearchParams();
     if (params.customer) query.append('customer', params.customer);
     if (params.consent) query.append('consent', params.consent);
-    
-    const queryString = query.toString();
-    return this.request(`/bank_accounts${queryString ? '?' + queryString : ''}`);
+    const qs = query.toString();
+    return this.request(`/bank_accounts${qs ? '?' + qs : ''}`);
   }
 
   /**
-   * Get bank account balance
+   * Fetch ALL bank accounts across all pages.
    */
+  async listAllBankAccounts(params: { customer?: string; consent?: string } = {}) {
+    const query = new URLSearchParams();
+    if (params.customer) query.append('customer', params.customer);
+    if (params.consent) query.append('consent', params.consent);
+    const qs = query.toString();
+    return this.getAll(`/bank_accounts${qs ? '?' + qs : ''}`);
+  }
+
   async getBankAccountBalance(bankAccountId: string) {
     return this.request(`/bank_accounts/${bankAccountId}/balance`);
   }
 
+  // ─── Bank sync endpoints ────────────────────────────────────────────
+
   /**
-   * Sync a bank account with the bank to get latest transactions
+   * Trigger a sync for a bank account.
+   * POST /bank_accounts/{id}/sync
+   * Rate limit: 1/hour/account (429 if exceeded).
    */
   async syncBankAccount(bankAccountId: string) {
     return this.request(`/bank_accounts/${bankAccountId}/sync`, {
@@ -174,15 +225,47 @@ export class FinexerClient {
     });
   }
 
-  /**
-   * Get sync status for a bank account
-   */
   async getSyncStatus(bankAccountId: string) {
     return this.request(`/bank_accounts/${bankAccountId}/sync`);
   }
 
   /**
-   * List transactions for a bank account
+   * Trigger sync and wait for it to finish (polls until status=idle).
+   * Returns when done or after timeout. Safe to call even if rate-limited.
+   */
+  async syncBankAccountAndWait(
+    bankAccountId: string,
+    maxWaitMs = 60_000,
+  ): Promise<any> {
+    let syncResult: any;
+    try {
+      syncResult = await this.syncBankAccount(bankAccountId);
+    } catch (err: any) {
+      // 429 = already synced recently — that's OK
+      if (err.message?.includes('429')) {
+        console.log(`Sync rate-limited for ${bankAccountId}, using existing data`);
+        return { status: 'rate_limited' };
+      }
+      throw err;
+    }
+
+    if (syncResult?.status === 'idle') return syncResult;
+
+    const start = Date.now();
+    while (Date.now() - start < maxWaitMs) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const status = await this.getSyncStatus(bankAccountId);
+      if (status?.status === 'idle') return status;
+    }
+
+    return syncResult;
+  }
+
+  // ─── Transaction endpoints ──────────────────────────────────────────
+
+  /**
+   * List transactions for a bank account (single page).
+   * GET /bank_accounts/{id}/transactions
    */
   async listTransactions(
     bankAccountId: string,
@@ -196,27 +279,104 @@ export class FinexerClient {
   ) {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        query.append(key, value.toString());
-      }
+      if (value !== undefined) query.append(key, value.toString());
     });
-    
-    const queryString = query.toString();
+    const qs = query.toString();
     return this.request(
-      `/bank_accounts/${bankAccountId}/transactions${queryString ? '?' + queryString : ''}`
+      `/bank_accounts/${bankAccountId}/transactions${qs ? '?' + qs : ''}`
+    );
+  }
+
+  /**
+   * Fetch ALL transactions across all pages.
+   */
+  async listAllTransactions(
+    bankAccountId: string,
+    params: {
+      status?: 'pending' | 'booked';
+      'timestamp.gte'?: string;
+      'timestamp.lte'?: string;
+    } = {}
+  ) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) query.append(key, value.toString());
+    });
+    const qs = query.toString();
+    return this.getAll(
+      `/bank_accounts/${bankAccountId}/transactions${qs ? '?' + qs : ''}`
     );
   }
 }
 
 /**
- * Create a Finexer client instance
+ * Create a Finexer client instance from environment.
  */
 export function createFinexerClient(): FinexerClient {
   const apiKey = Deno.env.get('FINEXER_API_KEY');
-  
   if (!apiKey) {
     throw new Error('FINEXER_API_KEY environment variable is required');
   }
-
   return new FinexerClient({ apiKey });
+}
+
+// ─── Mapping helpers ────────────────────────────────────────────────────
+
+export function mapTransactionDirection(type: string | null | undefined) {
+  return String(type || '').toLowerCase() === 'credit' ? 'in' : 'out';
+}
+
+export function mapTransactionStatus(status: string | null | undefined) {
+  const v = String(status || '').toLowerCase();
+  if (['pending', 'authorised', 'authorized'].includes(v)) return 'pending';
+  if (['reversed'].includes(v)) return 'reversed';
+  if (['deleted'].includes(v)) return 'deleted';
+  return 'booked';
+}
+
+/**
+ * Parse merchant name from transaction data.
+ * Priority: metadata.party_name > merchant > extracted from description
+ */
+export function parseMerchantName(txn: any): string | null {
+  if (txn.metadata?.party_name) return txn.metadata.party_name;
+  if (txn.merchant) return txn.merchant;
+  if (txn.description) {
+    // Extract from description — first meaningful words before reference numbers/dates
+    const parts = txn.description.split(/\s+/);
+    const meaningful = parts.filter((p: string) =>
+      !p.match(/^\d+$/) &&          // not just numbers
+      !p.match(/^CD$/) &&           // not "CD"
+      !p.match(/^\d{2}[A-Z]{3}\d{2}$/)  // not dates like "23MAY26"
+    );
+    if (meaningful.length > 0) return meaningful.slice(0, 3).join(' ');
+  }
+  return null;
+}
+
+/**
+ * Parse transaction date from description or timestamp.
+ * Description often contains dates like "23MAY26" = 2026-05-23.
+ */
+export function parseTransactionDate(txn: any): string {
+  // Try to extract from description
+  if (txn.description) {
+    const dateMatch = txn.description.match(/(\d{2})([A-Z]{3})(\d{2})/);
+    if (dateMatch) {
+      const [, day, monthStr, year] = dateMatch;
+      const monthMap: Record<string, string> = {
+        'JAN': '01', 'FEB': '02', 'MAR': '03', 'APR': '04', 'MAY': '05', 'JUN': '06',
+        'JUL': '07', 'AUG': '08', 'SEP': '09', 'OCT': '10', 'NOV': '11', 'DEC': '12'
+      };
+      const month = monthMap[monthStr];
+      if (month) return `20${year}-${month}-${day}`;
+    }
+  }
+
+  // Pending = today, Booked = use timestamp
+  if (txn.status === 'pending') {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  return txn.timestamp?.split('T')[0] || new Date().toISOString().split('T')[0];
 }
