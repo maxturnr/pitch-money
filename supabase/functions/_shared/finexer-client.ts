@@ -288,7 +288,9 @@ export class FinexerClient {
   }
 
   /**
-   * Fetch ALL transactions across all pages.
+   * Fetch ALL transactions across all pages for a given status.
+   * If no status is passed, only returns the API default (booked).
+   * Use listAllTransactionsBothStatuses() to get pending + booked.
    */
   async listAllTransactions(
     bankAccountId: string,
@@ -306,6 +308,28 @@ export class FinexerClient {
     return this.getAll(
       `/bank_accounts/${bankAccountId}/transactions${qs ? '?' + qs : ''}`
     );
+  }
+
+  /**
+   * Fetch ALL transactions (both booked AND pending) across all pages.
+   *
+   * Finexer returns only booked transactions by default. Pending
+   * transactions require a separate request with status=pending.
+   * This method makes both calls and merges the results.
+   */
+  async listAllTransactionsBothStatuses(
+    bankAccountId: string,
+    params: {
+      'timestamp.gte'?: string;
+      'timestamp.lte'?: string;
+    } = {}
+  ): Promise<any[]> {
+    const [booked, pending] = await Promise.all([
+      this.listAllTransactions(bankAccountId, { ...params, status: 'booked' }),
+      this.listAllTransactions(bankAccountId, { ...params, status: 'pending' }),
+    ]);
+    console.log(`Fetched ${booked.length} booked + ${pending.length} pending transactions for ${bankAccountId}`);
+    return [...booked, ...pending];
   }
 }
 
