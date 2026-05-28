@@ -194,9 +194,9 @@ async function syncAllForCustomer(
 
         if (!localAccount?.id) continue;
 
-        // Sync + pull transactions
+        // Sync + pull transactions (booked AND pending)
         await finexer.syncBankAccountAndWait(ba.id, 45_000);
-        const txns = await finexer.listAllTransactions(ba.id);
+        const txns = await finexer.listAllTransactionsBothStatuses(ba.id);
 
         if (txns.length > 0) {
           for (let i = 0; i < txns.length; i += 500) {

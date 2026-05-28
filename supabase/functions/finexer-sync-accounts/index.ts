@@ -167,9 +167,10 @@ serve(async (req) => {
           console.log(`Triggering sync for ${ba.id}...`);
           await finexer.syncBankAccountAndWait(ba.id, 60_000);
 
-          // Step 2: Fetch ALL transactions with full pagination
-          console.log(`Fetching transactions for ${ba.id}...`);
-          const allTransactions = await finexer.listAllTransactions(ba.id);
+          // Step 2: Fetch ALL transactions — booked AND pending separately
+          // Finexer only returns booked by default; pending needs explicit status=pending
+          console.log(`Fetching transactions (booked + pending) for ${ba.id}...`);
+          const allTransactions = await finexer.listAllTransactionsBothStatuses(ba.id);
           console.log(`Total transactions fetched for ${ba.id}: ${allTransactions.length}`);
 
           if (allTransactions.length === 0) continue;
