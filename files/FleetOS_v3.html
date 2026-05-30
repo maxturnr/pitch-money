@@ -168,10 +168,10 @@ body *, body *::before, body *::after{letter-spacing:0 !important;}
 .stock-action-btn{display:none;}
 .stock-action-btn.active{display:inline-flex;}
 .stock-subpanel{display:none;}
-.stock-subpanel.active{display:block;}
+.stock-subpanel.active{display:flex;flex-direction:column;flex:1;min-height:0;}
 .stock-template{padding-top:0;margin-left:-28px;margin-right:-28px;height:calc(100vh - 44px);}
 .stock-surface{background:#fff;border:1px solid rgba(20,19,15,0.08);border-right:none;border-radius:8px 0 0 8px;box-shadow:none;overflow:hidden;display:flex;flex-direction:column;height:100%;}
-.stock-redesign{display:flex;flex-direction:column;gap:0;min-height:0;}
+.stock-redesign{display:flex;flex-direction:column;gap:0;min-height:0;flex:1;}
 .tab-panel#tab-stock{overflow:visible;}
 .stock-redesign .stock-page-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:10px 24px;border-bottom:1px solid rgba(20,19,15,0.08);flex-wrap:wrap;}
 .stock-redesign .stock-page-header-left{display:flex;align-items:center;gap:8px;min-height:20px;}
@@ -209,7 +209,7 @@ body *, body *::before, body *::after{letter-spacing:0 !important;}
 .stock-redesign .stock-search-clear:hover{background:#ebe7de;color:#14130f;}
 .stock-redesign .stock-table-shell{overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column;}
 .stock-redesign .stock-table-wrap{overflow:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0;}
-.stock-redesign .stock-table{width:100%;border-collapse:collapse;min-width:980px;table-layout:fixed;}
+.stock-redesign .stock-table{width:100%;border-collapse:collapse;min-width:1110px;table-layout:fixed;}
 .stock-redesign .stock-table thead{background:#fff;border-bottom:1px solid rgba(20,19,15,0.08);}
 .stock-redesign .stock-table thead th{position:sticky;top:0;z-index:2;background:#fff;}
 .stock-redesign .stock-table th{padding:12px 28px;text-align:left;font-size:12px;font-weight:400;color:#8d867b;letter-spacing:0.01em;text-transform:none;white-space:nowrap;}
@@ -219,8 +219,9 @@ body *, body *::before, body *::after{letter-spacing:0 !important;}
 .stock-redesign .stock-table th:nth-child(3),.stock-redesign .stock-table td:nth-child(3),
 .stock-redesign .stock-table th:nth-child(4),.stock-redesign .stock-table td:nth-child(4),
 .stock-redesign .stock-table th:nth-child(5),.stock-redesign .stock-table td:nth-child(5),
-.stock-redesign .stock-table th:nth-child(6),.stock-redesign .stock-table td:nth-child(6){width:130px;}
-.stock-redesign .stock-table th:nth-child(7),.stock-redesign .stock-table td:nth-child(7){width:110px;}
+.stock-redesign .stock-table th:nth-child(6),.stock-redesign .stock-table td:nth-child(6),
+.stock-redesign .stock-table th:nth-child(7),.stock-redesign .stock-table td:nth-child(7){width:130px;}
+.stock-redesign .stock-table th:nth-child(8),.stock-redesign .stock-table td:nth-child(8){width:110px;}
 .stock-redesign .stock-table tbody tr{border-bottom:1px solid rgba(20,19,15,0.06);}
 .stock-redesign .stock-table tbody tr:last-child{border-bottom:none;}
 .stock-redesign .stock-row-main{cursor:pointer;transition:background-color .15s ease;}
@@ -1272,6 +1273,7 @@ body *, body *::before, body *::after{letter-spacing:0 !important;}
       <button class="nav-btn" onclick="showTab('expenses',this)" title="Transactions"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 12L13 4M13 4H7M13 4v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span><span class="nav-label">Transactions</span><span class="nav-short">TX</span></button>
       <button class="nav-btn" onclick="showTab('credit-lines',this)" title="Credit Lines"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span><span class="nav-label">Credit Lines</span><span class="nav-short">CL</span></button>
       <button class="nav-btn" onclick="showTab('income',this)" title="Income"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 4L13 12M3 12V6M3 12h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span><span class="nav-label">Income</span><span class="nav-short">IN</span></button>
+      <button class="nav-btn" onclick="showTab('bank-accounts',this)" title="Bank Accounts"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 7h8M4 10h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span><span class="nav-label">Bank Accounts</span><span class="nav-short">BA</span></button>
       <button class="nav-btn" onclick="showTab('bank-movements',this)" title="Bank Movements"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6h10M3 10h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="6" cy="6" r="1.4" fill="currentColor"/><circle cx="11" cy="10" r="1.4" fill="currentColor"/></svg></span><span class="nav-label">Bank Movements</span><span class="nav-short">BM</span></button>
 
       <div class="nav-group-label">Reports</div>
@@ -1423,6 +1425,7 @@ body *, body *::before, body *::after{letter-spacing:0 !important;}
                 <thead><tr>
                   <th>Vehicle</th>
                   <th>Paid</th>
+                  <th>Advertised</th>
                   <th>Sold For</th>
                   <th>Direct Costs</th>
                   <th>VAT</th>
@@ -1654,7 +1657,6 @@ body *, body *::before, body *::after{letter-spacing:0 !important;}
               <table class="expenses-table">
                 <thead>
                   <tr>
-                    <th>Date</th>
                     <th>Transaction</th>
                     <th>Vehicle</th>
                     <th>User</th>
@@ -1781,30 +1783,136 @@ body *, body *::before, body *::after{letter-spacing:0 !important;}
     </div>
 
     <!-- BANK MOVEMENTS -->
-    <div class="tab-panel" id="tab-bank-movements">
+    <div class="tab-panel" id="tab-bank-accounts">
       <div class="page-header">
         <div>
-          <div class="page-title">Bank <span>Movements</span></div>
-          <div class="page-sub">Transfer money between accounts</div>
+          <div class="page-title">Bank <span>Accounts</span></div>
+          <div class="page-sub">Manage account balances and payment accounts used across transactions, income, and transfers.</div>
         </div>
-        <button class="btn-primary" onclick="openModal('add-bank-movement')">+ Add Transfer</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-secondary" onclick="manualSyncFinexerAccounts(this)">🔄 Sync Now</button>
+          <button class="btn-primary bank-connect-trigger" onclick="connectFinexerBank(this)">+ Add Bank Account</button>
+        </div>
       </div>
-      <div class="filter-bar">
-        <select class="filter-select" id="movement-account-filter" onchange="renderBankMovements()">
-          <option value="">All Accounts</option>
-        </select>
-        <div class="filter-sep"></div>
-        <input type="date" class="filter-input" id="movement-from" onchange="renderBankMovements()">
-        <span class="filter-label">to</span>
-        <input type="date" class="filter-input" id="movement-to" onchange="renderBankMovements()">
+      <div class="kpi-row" style="margin-bottom:24px">
+        <div class="kpi">
+          <div class="kpi-label">Accounts</div>
+          <div class="kpi-value" id="bank-accounts-total-count">0</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Active</div>
+          <div class="kpi-value gold" id="bank-accounts-active-count">0</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Total Balance</div>
+          <div class="kpi-value green" id="bank-accounts-total-balance">£0.00</div>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr>
-            <th>Date</th><th>From Account</th><th>→</th><th>To Account</th><th>Amount</th><th>Reason</th><th>Reference</th><th></th>
+            <th>Account Name</th><th>Type</th><th>Current Balance</th><th>Account Number</th><th>Sort Code</th><th>Default</th><th>Status</th><th></th>
           </tr></thead>
-          <tbody id="bank-movements-tbody"></tbody>
+          <tbody id="bank-accounts-page-tbody"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- BANK MOVEMENTS -->
+    <div class="tab-panel" id="tab-bank-movements">
+      <div class="expenses-template">
+        <div class="expenses-surface">
+          <div class="expenses-header">
+            <div class="expenses-header-copy">
+              <div class="expenses-page-title">Bank Transactions</div>
+            </div>
+            <button class="expenses-add-btn" type="button" onclick="manualSyncFinexerAccounts(this)">🔄 Sync Now</button>
+          </div>
+
+          <div class="expenses-summary">
+            <div class="expenses-summary-card">
+              <div class="expenses-summary-value" id="bank-txn-total-count">0</div>
+              <div class="expenses-summary-label">Count</div>
+            </div>
+            <div class="expenses-summary-card">
+              <div class="expenses-summary-value money-in" id="bank-txn-money-in">£0.00</div>
+              <div class="expenses-summary-label">Money In</div>
+            </div>
+            <div class="expenses-summary-card">
+              <div class="expenses-summary-value money-out" id="bank-txn-money-out">£0.00</div>
+              <div class="expenses-summary-label">Money Out</div>
+            </div>
+            <div class="expenses-summary-card">
+              <div class="expenses-summary-value" id="bank-txn-net-change">£0.00</div>
+              <div class="expenses-summary-label">Net Change</div>
+            </div>
+          </div>
+
+          <div class="expenses-controls">
+            <div class="expenses-controls-left">
+              <button class="expenses-filter-btn" id="bank-txn-filter-toggle" type="button" onclick="toggleBankTxnFilters()" aria-label="Open filters">▽ Filters</button>
+              <select class="expenses-quick-filter" id="bank-txn-account-filter" onchange="renderBankTransactions()">
+                <option value="">Account is</option>
+              </select>
+              <select class="expenses-quick-filter" id="bank-txn-status-filter" onchange="renderBankTransactions()">
+                <option value="">Status is</option>
+                <option value="booked">Booked</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+            <div class="expenses-controls-right">
+              <select class="expenses-quick-filter" id="bank-txn-sort" onchange="renderBankTransactions()">
+                <option value="recent">Sort by: Most recent</option>
+                <option value="oldest">Sort by: Oldest</option>
+                <option value="amount_desc">Sort by: Highest amount</option>
+                <option value="amount_asc">Sort by: Lowest amount</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="expenses-table-shell">
+            <div class="expenses-table-wrapper">
+              <table class="expenses-table">
+                <thead>
+                  <tr>
+                    <th>Transaction</th>
+                    <th>Vehicle</th>
+                    <th>User</th>
+                    <th>Account</th>
+                    <th>Invoice</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="bank-movements-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-drawer-backdrop" id="bank-txn-filter-backdrop" onclick="toggleFilterDrawer('bank-txn', false)"></div>
+        <aside class="filter-drawer" id="bank-txn-filter-drawer">
+          <div class="filter-drawer-head">
+            <div class="filter-drawer-title">Bank Transaction Filters</div>
+            <button class="filter-drawer-close" type="button" onclick="toggleFilterDrawer('bank-txn', false)">×</button>
+          </div>
+          <div class="filter-drawer-body">
+            <div class="filter-drawer-group">
+              <label class="filter-drawer-label" for="bank-txn-direction-filter">Direction</label>
+              <select class="filter-select" id="bank-txn-direction-filter" onchange="renderBankTransactions()">
+                <option value="">All</option>
+                <option value="in">Money In</option>
+                <option value="out">Money Out</option>
+              </select>
+            </div>
+            <div class="filter-drawer-group">
+              <div class="filter-drawer-label">Date Range</div>
+              <div class="filter-drawer-row">
+                <input type="date" class="filter-input" id="bank-txn-from" onchange="renderBankTransactions()">
+                <input type="date" class="filter-input" id="bank-txn-to" onchange="renderBankTransactions()">
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
 
@@ -1857,7 +1965,7 @@ body *, body *::before, body *::after{letter-spacing:0 !important;}
         <div class="card">
           <div class="card-header">
             <div class="card-title">Bank Accounts</div>
-            <button class="btn-primary" onclick="openModal('add-bank-account')">+ Add Bank Account</button>
+            <button class="btn-primary bank-connect-trigger" onclick="connectFinexerBank(this)">+ Add Bank Account</button>
           </div>
           <div class="card-body">
             <div class="table-wrap">
@@ -2673,6 +2781,8 @@ let transactions = []
 let transactionSplits = []
 let transactionDocuments = []
 let bankAccounts = []
+let bankTransactions = []
+let reconciliations = []
 let balanceSheet = {acc1:0,acc2:0,parts30:0,mech30:0,debtors:0,other_liab:0}
 let mileageTrips = []
 let dealershipUsers = []
@@ -3656,24 +3766,253 @@ function updateQBBadge(){
   if(menuItem) menuItem.textContent=qbConnected?'QB: ON':'QB: OFF'
 }
 
+async function checkFinexerCallback(){
+  const params = new URLSearchParams(window.location.search)
+  const finexerReturn = params.get('finexer_return')
+  
+  if(finexerReturn === 'success' || params.get('consent')){
+    window.history.replaceState({},'',window.location.pathname)
+    
+    toast('Syncing bank accounts...')
+    
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    try {
+      const { data: { session } } = await sb.auth.getSession()
+      if(!session?.access_token){
+        toast('Please sign in to sync your bank accounts', true)
+        return
+      }
+      
+      const response = await fetch('https://hnypmigzwfavwcwarmnk.supabase.co/functions/v1/finexer-sync-accounts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ account_id: accountId })
+      })
+      
+      const data = await response.json()
+      if(!response.ok || data?.error){
+        console.error('Finexer sync error:', data?.error)
+        toast('Bank connected! Accounts will sync shortly.', false)
+      } else {
+        const syncedAccounts = data?.synced_accounts || 0
+        if(syncedAccounts > 0){
+          toast(`Successfully synced ${syncedAccounts} bank account${syncedAccounts > 1 ? 's' : ''}!`)
+          await loadAll(true)
+        } else {
+          toast('Bank connected! Accounts will appear shortly.', false)
+        }
+      }
+    } catch(error){
+      console.error('Finexer callback sync error:', error)
+      toast('Bank connected! Accounts will sync shortly.', false)
+    }
+  }
+}
+
+async function connectFinexerBank(trigger){
+  if(!accountId){
+    toast('No account selected', true)
+    return
+  }
+
+  const buttons=[...document.querySelectorAll('.bank-connect-trigger')]
+  const originalLabels=buttons.map(button => button.textContent)
+  buttons.forEach(button => {
+    button.disabled=true
+    button.textContent='Connecting...'
+  })
+  if(trigger && !buttons.includes(trigger)){
+    trigger.disabled=true
+    trigger.textContent='Connecting...'
+  }
+
+  try {
+    const { data: { session } } = await sb.auth.getSession()
+    if(!session?.access_token){
+      throw new Error('You need to sign in again before connecting a bank account')
+    }
+
+    const isHttpsReturn = window.location.protocol === 'https:'
+    let returnUrl = null
+    if(isHttpsReturn){
+      const baseUrl = window.location.origin + window.location.pathname
+      returnUrl = `${baseUrl}?finexer_return=success`
+    }
+    
+    const response = await fetch('https://hnypmigzwfavwcwarmnk.supabase.co/functions/v1/finexer-create-consent-link', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        account_id: accountId,
+        history_days: 365,
+        return_url: returnUrl
+      })
+    })
+
+    const data = await response.json()
+    if(!response.ok || data?.error){
+      throw new Error(data?.error || 'Failed to create Finexer consent link')
+    }
+    if(!data?.consent_url){
+      throw new Error('Finexer did not return a consent URL')
+    }
+
+    toast('Redirecting to Finexer…')
+    window.location.href = data.consent_url
+  } catch(error){
+    console.error('Finexer connect error:', error)
+    toast(error.message || 'Failed to connect bank account', true)
+    buttons.forEach((button, index) => {
+      button.disabled=false
+      button.textContent=originalLabels[index]
+    })
+    if(trigger && !buttons.includes(trigger)){
+      trigger.disabled=false
+      trigger.textContent='+ Add Bank Account'
+    }
+  }
+}
+
+async function manualSyncFinexerAccounts(button){
+  if(!accountId){
+    toast('No account selected', true)
+    return
+  }
+  
+  const originalText = button.textContent
+  button.disabled = true
+  button.textContent = 'Syncing...'
+  
+  try {
+    const { data: { session } } = await sb.auth.getSession()
+    if(!session?.access_token){
+      throw new Error('Please sign in to sync bank accounts')
+    }
+    
+    const { data: connection } = await sb
+      .from('bank_connections')
+      .select('id')
+      .eq('account_id', accountId)
+      .eq('provider', 'finexer')
+      .limit(1)
+      .maybeSingle()
+    
+    if(!connection){
+      toast('No Finexer connection found. Please connect a bank first.', true)
+      return
+    }
+    
+    const response = await fetch('https://hnypmigzwfavwcwarmnk.supabase.co/functions/v1/finexer-sync-accounts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ account_id: accountId })
+    })
+    
+    const data = await response.json()
+    if(!response.ok || data?.error){
+      throw new Error(data?.error || 'Failed to sync bank accounts')
+    }
+    
+    const syncedAccounts = data?.synced_accounts || 0
+    const syncedTransactions = data?.synced_transactions || 0
+    
+    if(syncedAccounts > 0){
+      toast(`Synced ${syncedAccounts} account${syncedAccounts > 1 ? 's' : ''} and ${syncedTransactions} transaction${syncedTransactions !== 1 ? 's' : ''}!`)
+      await loadAll(true)
+    } else {
+      toast('No new accounts found. Your data is up to date.')
+    }
+  } catch(error){
+    console.error('Manual sync error:', error)
+    toast(error.message || 'Failed to sync bank accounts', true)
+  } finally {
+    button.disabled = false
+    button.textContent = originalText
+  }
+}
+
+let finexerAutoSyncPromise = null
+
+async function maybeSyncFinexerBankAccounts(){
+  if(!accountId || finexerAutoSyncPromise) return finexerAutoSyncPromise
+
+  const cooldownKey = `finexer_sync_attempt_${accountId}`
+  const lastAttempt = Number(safeSessionStorage.getItem(cooldownKey) || 0)
+  if(Date.now() - lastAttempt < 2 * 60 * 1000) return null
+  safeSessionStorage.setItem(cooldownKey, String(Date.now()))
+
+  finexerAutoSyncPromise = (async () => {
+    const { data: { session } } = await sb.auth.getSession()
+    if(!session?.access_token) return null
+
+    const { data: connection, error: connectionError } = await sb
+      .from('bank_connections')
+      .select('id, status, last_synced_at, last_auto_synced_at')
+      .eq('account_id', accountId)
+      .eq('provider', 'finexer')
+      .limit(1)
+      .maybeSingle()
+
+    if(connectionError){
+      console.error('Failed to inspect Finexer connection:', connectionError)
+      return null
+    }
+    if(!connection) return null
+
+    const response = await fetch('https://hnypmigzwfavwcwarmnk.supabase.co/functions/v1/finexer-sync-accounts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ account_id: accountId })
+    })
+
+    const data = await response.json()
+    if(!response.ok || data?.error){
+      throw new Error(data?.error || 'Failed to sync connected bank accounts')
+    }
+    return data
+  })().catch(error => {
+    console.error('Finexer auto-sync error:', error)
+    return null
+  }).finally(() => {
+    finexerAutoSyncPromise = null
+  })
+
+  return finexerAutoSyncPromise
+}
+
 // ══════════════════════════════════════════════
 // LOAD DATA
 // ══════════════════════════════════════════════
-async function loadAll(){
+async function loadAll(skipFinexerAutoSync=false){
   if(!accountId){
     console.error('No account ID - user not logged in')
     return
   }
   loading(true,'Syncing...')
   try {
-    const [ownedRes,sorRes,txRes,refundsRes,incomeRes,splitsRes,bankRes,bsRes,settingsRes,docsRes,mileageRes,usersRes] = await Promise.all([
+    const [ownedRes,sorRes,txRes,refundsRes,incomeRes,splitsRes,bankRes,bankTxnRes,reconRes,bsRes,settingsRes,docsRes,mileageRes,usersRes] = await Promise.all([
       sb.from('cars').select('*').eq('type','owned').eq('account_id',accountId).order('created_at',{ascending:false}),
       sb.from('cars').select('*').eq('type','sor').eq('account_id',accountId).order('created_at',{ascending:false}),
       sb.from('expenses').select('*').eq('account_id',accountId).order('date',{ascending:false}),
       sb.from('expense_refunds').select('*').eq('account_id',accountId).order('date',{ascending:false}),
       sb.from('income').select('*').eq('account_id',accountId).order('date',{ascending:false}),
       sb.from('transaction_splits').select('*'),
-      sb.from('bank_accounts').select('*').eq('account_id',accountId).eq('active',true).order('is_default',{ascending:false}),
+      sb.from('bank_accounts').select('*').eq('account_id',accountId).order('is_default',{ascending:false}),
+      sb.from('bank_transactions').select('*').eq('account_id',accountId).order('transaction_date',{ascending:false}),
+      sb.from('reconciliations').select('*').eq('account_id',accountId),
       sb.from('balance_sheet').select('*').eq('account_id',accountId).limit(1).single(),
       sb.from('settings').select('*').eq('account_id',accountId),
       sb.from('transaction_documents').select('*').order('uploaded_at',{ascending:false}),
@@ -3689,10 +4028,20 @@ async function loadAll(){
     if(incomeRes.data) income=incomeRes.data
     if(splitsRes.data) transactionSplits=splitsRes.data
     if(bankRes.data) bankAccounts=bankRes.data
+    if(bankTxnRes.data) bankTransactions=bankTxnRes.data
+    if(reconRes.data) reconciliations=reconRes.data
     if(bsRes.data) balanceSheet=bsRes.data
     transactionDocuments = docsRes.data || []
     expenseDocuments = docsRes.data || []
     mileageTrips = mileageRes.data || []
+
+    if(!skipFinexerAutoSync && bankAccounts.length===0){
+      const syncResult = await maybeSyncFinexerBankAccounts()
+      const syncedAccounts = Number(syncResult?.accounts_synced ?? syncResult?.synced_accounts ?? 0)
+      if(syncedAccounts > 0){
+        return await loadAll(true)
+      }
+    }
     
     // Debug users RPC call
     console.log('Users RPC Response:', usersRes)
@@ -3731,6 +4080,7 @@ async function initApp(){
   if(savedStockTab === 'owned' || savedStockTab === 'sor') activeStockTab = savedStockTab
   applySidebarState()
   checkQBCallback()
+  await checkFinexerCallback()
   await loadAll()
   
   // Restore last active tab
@@ -3814,7 +4164,8 @@ function renderCurrentTab(){
   else if(currentTab==='expenses') renderExpenses()
   else if(currentTab==='credit-lines') renderCreditLines()
   else if(currentTab==='income') renderIncome()
-  else if(currentTab==='bank-movements') renderBankMovements()
+  else if(currentTab==='bank-accounts') renderBankAccounts()
+  else if(currentTab==='bank-movements') renderBankTransactions()
   else if(currentTab==='pnl') renderPnl()
   else if(currentTab==='balance') renderBalance()
   else if(currentTab==='mileage') renderMileageTrips()
@@ -6193,7 +6544,7 @@ function ownedTotalCostsLabel(){
 // ══════════════════════════════════════════════
 function renderOwned(){
   const ownedHeaderCells = document.querySelectorAll('#stock-subpanel-owned thead th')
-  if(ownedHeaderCells[4]) ownedHeaderCells[4].textContent = ownedDirectCostLabel()
+  if(ownedHeaderCells[5]) ownedHeaderCells[5].textContent = ownedDirectCostLabel()
   const statusF=document.getElementById('owned-status-filter').value
   const makeF=document.getElementById('owned-make-filter').value
   const dateFrom=document.getElementById('owned-date-from').value
@@ -6213,7 +6564,7 @@ function renderOwned(){
     return numA - numB
   })
   const tbody=document.getElementById('owned-tbody')
-  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="7"><div class="stock-empty-state"><div class="stock-empty-icon">🚗</div><div class="stock-empty-text">No cars match filters</div></div></td></tr>`;return}
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="8"><div class="stock-empty-state"><div class="stock-empty-icon">🚗</div><div class="stock-empty-text">No cars match filters</div></div></td></tr>`;return}
   tbody.innerHTML=filtered.map(c=>{
     const costBreakdown = getOwnedDirectCostBreakdown(c)
     const p = ownedProfit(c)
@@ -6231,6 +6582,7 @@ function renderOwned(){
     const mainRow = `<tr class="stock-row-main row-expandable" id="stock-main-owned-${c.id}" onclick="openStockDrawer('owned', ${c.id})">
       <td>${renderStockVehicleCell(c)}</td>
       <td class="cell-amount">${c.paid ? fmt(c.paid) : '—'}</td>
+      <td class="cell-amount">${c.advertised ? fmt(c.advertised) : '—'}</td>
       <td class="cell-amount">${getOwnedSalePrice(c) ? fmt(getOwnedSalePrice(c)) : '—'}</td>
       <td class="cell-amount">${costs ? fmt(costs) : '—'}</td>
       <td class="cell-amount">${vatRegistered && p && p.netVat ? fmt(p.netVat) : '—'}</td>
@@ -7074,13 +7426,29 @@ function renderBalance(){
 let editingBankAccountId=null
 
 function renderBankAccounts(){
-  const tbody=document.getElementById('bank-accounts-tbody')
+  const settingsTbody=document.getElementById('bank-accounts-tbody')
+  const pageTbody=document.getElementById('bank-accounts-page-tbody')
+  const emptyHtml=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🏦</div><div class="empty-text">No bank accounts yet</div></div></td></tr>`
+  const totalCount=bankAccounts.length
+  const activeCount=bankAccounts.filter(b=>b.active!==false).length
+  const totalBalance=bankAccounts.reduce((sum,b)=>sum+(Number(b.current_balance)||0),0)
+  const totalCountEl=document.getElementById('bank-accounts-total-count')
+  const activeCountEl=document.getElementById('bank-accounts-active-count')
+  const totalBalanceEl=document.getElementById('bank-accounts-total-balance')
+  if(totalCountEl) totalCountEl.textContent=String(totalCount)
+  if(activeCountEl) activeCountEl.textContent=String(activeCount)
+  if(totalBalanceEl) totalBalanceEl.textContent=fmt(totalBalance)
   if(!bankAccounts.length){
-    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🏦</div><div class="empty-text">No bank accounts yet</div></div></td></tr>`
+    if(settingsTbody) settingsTbody.innerHTML=emptyHtml
+    if(pageTbody) pageTbody.innerHTML=emptyHtml
+    maybeSyncFinexerBankAccounts().then(result => {
+      const syncedAccounts = Number(result?.accounts_synced ?? result?.synced_accounts ?? 0)
+      if(syncedAccounts > 0) loadAll(true)
+    }).catch(error => console.error('Bank accounts tab sync error:', error))
     return
   }
   
-  tbody.innerHTML=bankAccounts.map(b=>{
+  const rowsHtml=bankAccounts.map(b=>{
     // Display the balance exactly as entered by user - this is their admin override
     const currentBalance = Number(b.current_balance)||0
     
@@ -7091,13 +7459,15 @@ function renderBankAccounts(){
       <td class="muted-text" style="font-family:'DM Mono',monospace;font-size:12px">${b.account_number||'—'}</td>
       <td class="muted-text" style="font-family:'DM Mono',monospace;font-size:12px">${b.sort_code||'—'}</td>
       <td>${b.is_default?'<span class="badge badge-gold">Default</span>':'<span class="muted-text">—</span>'}</td>
-      <td>${b.active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-muted">Inactive</span>'}</td>
+      <td>${b.active===false?'<span class="badge badge-muted">Inactive</span>':'<span class="badge badge-green">Active</span>'}</td>
       <td>
         <button class="link-btn" onclick="editBankAccount(${b.id})">Edit</button>
         ${!b.is_default?`<button class="action-btn" onclick="deleteBankAccount(${b.id})">×</button>`:''}
       </td>
     </tr>`
   }).join('')
+  if(settingsTbody) settingsTbody.innerHTML=rowsHtml
+  if(pageTbody) pageTbody.innerHTML=rowsHtml
 }
 
 function editBankAccount(id){
@@ -7137,8 +7507,7 @@ async function saveBankAccount(){
     current_balance:parseFloat(document.getElementById('bank-account-balance').value)||0,
     account_number:document.getElementById('bank-account-number').value.trim()||null,
     sort_code:document.getElementById('bank-account-sort').value.trim()||null,
-    is_default:isDefault,
-    active:true
+    is_default:isDefault
   }
   
   try {
@@ -8285,9 +8654,6 @@ function formatExpenseGroupDate(value){
 function renderUnifiedExpenseRow(row){
   return `<tr onclick="openTransactionDrawer('${row.source}', '${String(row.sourceId).replace(/'/g, "\\'")}')">
     <td>
-      <div class="expenses-transaction-title">${escapeHtml(row.dateLabel || '-')}</div>
-    </td>
-    <td>
       <div class="expenses-transaction-title">${escapeHtml(row.title)}</div>
       ${row.subtitle ? `<div class="expenses-transaction-sub">${escapeHtml(row.subtitle)}</div>` : ''}
     </td>
@@ -8311,8 +8677,14 @@ function renderUnifiedExpenseRow(row){
 }
 
 function renderUnifiedExpenseRows(rows){
+  let previousDate = null
   return rows.map(row => {
-    return renderUnifiedExpenseRow(row)
+    const dateKey = row.date || 'unknown'
+    const marker = dateKey !== previousDate
+      ? `<tr class="expenses-date-row"><td class="expenses-date-cell" colspan="6"><span class="expenses-date-chip">${escapeHtml(formatExpenseGroupDate(row.date))}</span></td></tr>`
+      : ''
+    previousDate = dateKey
+    return marker + renderUnifiedExpenseRow(row)
   }).join('')
 }
 
@@ -8874,7 +9246,7 @@ async function renderExpenses(){
   if(!tbody) return
 
   if(!filtered.length){
-    tbody.innerHTML = `<tr><td colspan="7"><div class="expenses-empty-state"><div class="expenses-empty-title">No transactions found</div><div class="expenses-empty-text">Try adjusting your quick filters or date range to bring transactions into view.</div></div></td></tr>`
+    tbody.innerHTML = `<tr><td colspan="6"><div class="expenses-empty-state"><div class="expenses-empty-title">No transactions found</div><div class="expenses-empty-text">Try adjusting your quick filters or date range to bring transactions into view.</div></div></td></tr>`
     if(activeTransactionDrawer) renderTransactionDrawer()
     return
   }
@@ -10191,46 +10563,153 @@ async function deleteIncome(id){
 }
 
 // ══════════════════════════════════════════════
-// BANK MOVEMENTS
+// BANK TRANSACTIONS (FINEXER)
 // ══════════════════════════════════════════════
-let bankMovements = []
+let expandedBankTxnId = null
 
-async function renderBankMovements(){
-  const {data, error} = await sb.from('bank_movements').select(`
-    *,
-    from_account:accounts!bank_movements_from_account_id_fkey(name),
-    to_account:accounts!bank_movements_to_account_id_fkey(name)
-  `).eq('account_id', accountId).order('date', {ascending: false})
-  if(error) return toast('Error loading movements', true)
+function toggleBankTxnFilters(){
+  toggleFilterDrawer('bank-txn', !document.getElementById('bank-txn-filter-drawer').classList.contains('open'))
+}
+
+function renderBankTransactions(){
+  const accountFilter = document.getElementById('bank-txn-account-filter').value
+  const statusFilter = document.getElementById('bank-txn-status-filter').value
+  const directionFilter = document.getElementById('bank-txn-direction-filter').value
+  const dateFrom = document.getElementById('bank-txn-from').value
+  const dateTo = document.getElementById('bank-txn-to').value
+  const sortBy = document.getElementById('bank-txn-sort').value
   
-  bankMovements = data || []
+  // Populate account filter dropdown
+  const accountSelect = document.getElementById('bank-txn-account-filter')
+  const currentValue = accountSelect.value
+  accountSelect.innerHTML = '<option value="">Account is</option>' + 
+    bankAccounts.map(b => `<option value="${b.id}">${b.account_name}</option>`).join('')
+  accountSelect.value = currentValue
+  
+  // Filter transactions
+  let filtered = bankTransactions.filter(t => {
+    if(accountFilter && t.bank_account_id !== Number(accountFilter)) return false
+    if(statusFilter && t.status !== statusFilter) return false
+    if(directionFilter && t.direction !== directionFilter) return false
+    if(dateFrom && t.transaction_date < dateFrom) return false
+    if(dateTo && t.transaction_date > dateTo) return false
+    return true
+  })
+  
+  // Sort transactions
+  filtered.sort((a, b) => {
+    if(sortBy === 'recent') return new Date(b.transaction_date) - new Date(a.transaction_date)
+    if(sortBy === 'oldest') return new Date(a.transaction_date) - new Date(b.transaction_date)
+    if(sortBy === 'amount_desc') return Number(b.amount) - Number(a.amount)
+    if(sortBy === 'amount_asc') return Number(a.amount) - Number(b.amount)
+    return 0
+  })
+  
+  // Calculate KPIs
+  const totalCount = filtered.length
+  const moneyIn = filtered.filter(t => t.direction === 'in').reduce((sum, t) => sum + Number(t.amount), 0)
+  const moneyOut = filtered.filter(t => t.direction === 'out').reduce((sum, t) => sum + Number(t.amount), 0)
+  const netChange = moneyIn - moneyOut
+  
+  document.getElementById('bank-txn-total-count').textContent = totalCount
+  document.getElementById('bank-txn-money-in').textContent = fmt(moneyIn)
+  document.getElementById('bank-txn-money-out').textContent = fmt(moneyOut)
+  document.getElementById('bank-txn-net-change').textContent = fmt(netChange)
+  document.getElementById('bank-txn-net-change').style.color = netChange >= 0 ? 'var(--green)' : 'var(--red)'
+  
   const tbody = document.getElementById('bank-movements-tbody')
+  const emptyHtml = `<tr><td colspan="6"><div class="expenses-empty"><div class="expenses-empty-icon">💳</div><div class="expenses-empty-text">No bank transactions</div></div></td></tr>`
   
-  if(!bankMovements.length){
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔄</div><div class="empty-text">No transfers yet</div></div></td></tr>`
+  if(!filtered.length){
+    tbody.innerHTML = emptyHtml
     return
   }
   
-  tbody.innerHTML = bankMovements.map(m => `
-    <tr>
-      <td>${new Date(m.date).toLocaleDateString()}</td>
-      <td>${m.from_account?.name || '-'}</td>
-      <td style="text-align:center;color:var(--muted2)">→</td>
-      <td>${m.to_account?.name || '-'}</td>
-      <td style="font-family:'DM Mono',monospace;color:var(--blue)">£${m.amount.toFixed(2)}</td>
-      <td>${m.reason || '-'}</td>
-      <td style="font-family:'DM Mono',monospace;color:var(--muted2)">${m.reference || '-'}</td>
-      <td><button class="action-btn" onclick="deleteBankMovement(${m.id})">×</button></td>
-    </tr>
-  `).join('')
+  tbody.innerHTML = filtered.map(t => {
+    const account = bankAccounts.find(b => b.id === t.bank_account_id)
+    const accountName = account?.account_name || 'Unknown'
+    const isIn = t.direction === 'in'
+    const isExpanded = expandedBankTxnId === t.id
+    
+    // Check reconciliation status
+    const reconciliation = reconciliations.find(r => r.bank_transaction_id === t.id)
+    const isReconciled = reconciliation && reconciliation.status === 'matched'
+    const reconciledIcon = isReconciled ? '<span style="color:var(--green);font-size:16px">✓</span>' : '<span style="color:var(--muted2);font-size:16px">✕</span>'
+    
+    const mainRow = `<tr class="expenses-row ${isExpanded ? 'expanded' : ''}" onclick="toggleBankTxnRow(${t.id})">
+      <td>
+        <div class="expenses-cell-main">${t.merchant_name || t.description || 'Bank Transaction'}</div>
+        <div class="expenses-cell-sub">${new Date(t.transaction_date).toLocaleDateString('en-GB', {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}</div>
+      </td>
+      <td>
+        <div class="expenses-cell-main">Unassigned</div>
+        <div class="expenses-cell-sub">${t.category || 'Uncategorized'}</div>
+      </td>
+      <td>
+        <div class="expenses-cell-main">${t.reference || '—'}</div>
+        <div class="expenses-cell-sub">Payment ref</div>
+      </td>
+      <td>
+        <div class="expenses-cell-main">${accountName}</div>
+        <div class="expenses-cell-sub">${account?.sort_code || ''} ${account?.account_number || ''}</div>
+      </td>
+      <td>
+        <div class="expenses-cell-main">${reconciledIcon}</div>
+        <div class="expenses-cell-sub">${t.status === 'pending' ? 'Pending' : 'Booked'}</div>
+      </td>
+      <td class="expenses-cell-amount ${isIn ? 'money-in' : 'money-out'}">
+        ${isIn ? '+' : '−'}${fmt(t.amount)}
+      </td>
+    </tr>`
+    
+    const detailRow = isExpanded ? `<tr class="expenses-detail-row">
+      <td colspan="6">
+        <div class="expenses-detail">
+          <div class="expenses-detail-grid">
+            <div class="expenses-detail-item">
+              <div class="expenses-detail-label">Description</div>
+              <div class="expenses-detail-value">${t.description || '—'}</div>
+            </div>
+            <div class="expenses-detail-item">
+              <div class="expenses-detail-label">Reference</div>
+              <div class="expenses-detail-value">${t.reference || '—'}</div>
+            </div>
+            <div class="expenses-detail-item">
+              <div class="expenses-detail-label">Merchant</div>
+              <div class="expenses-detail-value">${t.merchant_name || '—'}</div>
+            </div>
+            <div class="expenses-detail-item">
+              <div class="expenses-detail-label">Category</div>
+              <div class="expenses-detail-value">${t.category || 'Uncategorized'}</div>
+            </div>
+            <div class="expenses-detail-item">
+              <div class="expenses-detail-label">Running Balance</div>
+              <div class="expenses-detail-value">${t.running_balance ? fmt(t.running_balance) : '—'}</div>
+            </div>
+            <div class="expenses-detail-item">
+              <div class="expenses-detail-label">Transaction ID</div>
+              <div class="expenses-detail-value" style="font-family:'DM Mono',monospace;font-size:11px">${t.finexer_transaction_id || '—'}</div>
+            </div>
+            <div class="expenses-detail-item">
+              <div class="expenses-detail-label">Booked At</div>
+              <div class="expenses-detail-value">${t.booked_at ? new Date(t.booked_at).toLocaleString('en-GB') : '—'}</div>
+            </div>
+            <div class="expenses-detail-item">
+              <div class="expenses-detail-label">Status</div>
+              <div class="expenses-detail-value">${t.status === 'pending' ? '<span class="badge badge-gold">Pending</span>' : '<span class="badge badge-green">Booked</span>'}</div>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>` : ''
+    
+    return mainRow + detailRow
+  }).join('')
 }
 
-async function deleteBankMovement(id){
-  if(!confirm('Delete this transfer? This will NOT reverse the balance changes.')) return
-  const {error} = await sb.from('bank_movements').delete().eq('id', id)
-  if(error) return toast('Error deleting transfer', true)
-  toast('Transfer deleted')
-  renderBankMovements()
+function toggleBankTxnRow(id){
+  expandedBankTxnId = expandedBankTxnId === id ? null : id
+  renderBankTransactions()
 }
 
 document.addEventListener('click', event => {
