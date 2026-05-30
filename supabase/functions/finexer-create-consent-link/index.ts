@@ -177,21 +177,26 @@ serve(async (req) => {
       );
     }
 
-    // Store consent record
-    await supabaseClient
-      .from('bank_consents')
-      .upsert({
-        account_id: account_id,
-        bank_connection_id: connection.id,
-        provider: 'finexer',
-        provider_consent_id: consent.id,
-        finexer_consent_id: consent.id,
-        status: 'pending',
-        expires_at: consent.expires_at,
-        raw_payload: consent,
-      }, {
-        onConflict: 'provider,provider_consent_id',
-      });
+    // Store consent record (optional — table may not exist in older schemas)
+    try {
+      await supabaseClient
+        .from('bank_consents')
+        .upsert({
+          account_id: account_id,
+          bank_connection_id: connection.id,
+          provider: 'finexer',
+          provider_consent_id: consent.id,
+          finexer_consent_id: consent.id,
+          status: 'pending',
+          expires_at: consent.expires_at,
+          raw_payload: consent,
+        }, {
+          onConflict: 'provider,provider_consent_id',
+        });
+    } catch (_) {
+      // bank_consents table may not exist — connection record is sufficient
+      console.log('bank_consents table not available, skipping');
+    }
 
     return new Response(
       JSON.stringify({
